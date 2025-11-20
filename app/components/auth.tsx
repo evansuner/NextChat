@@ -109,7 +109,7 @@ export function AuthPage() {
         </>
       ) : null}
 
-      <div className={styles["auth-actions"]}>
+      {/* <div className={styles["auth-actions"]}>
         <IconButton
           text={Locale.Auth.Confirm}
           type="primary"
@@ -121,7 +121,7 @@ export function AuthPage() {
             goSaas();
           }}
         />
-      </div>
+      </div> */}
     </div>
   );
 }
