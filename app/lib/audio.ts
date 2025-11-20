@@ -24,7 +24,7 @@ export class AudioHandler {
   }
 
   getByteFrequencyData() {
-    this.analyser.getByteFrequencyData(this.analyserData);
+    this.analyser.getByteFrequencyData(this.analyserData as any);
     return this.analyserData;
   }
 
@@ -64,7 +64,7 @@ export class AudioHandler {
             int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
           }
 
-          const uint8Data = new Uint8Array(int16Data.buffer);
+          const uint8Data = new Uint8Array(int16Data.buffer as ArrayBuffer);
           onChunk(uint8Data);
           // save recordBuffer
           // @ts-ignore
@@ -169,7 +169,7 @@ export class AudioHandler {
     view.setUint32(40, byteLength, true); // data chunk length
 
     // using data.buffer, so no need to setUint16 to view.
-    return new Blob([view, data.buffer], { type: "audio/mpeg" });
+    return new Blob([view, data.buffer as ArrayBuffer], { type: "audio/mpeg" });
   }
   savePlayFile() {
     // @ts-ignore

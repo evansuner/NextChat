@@ -327,7 +327,7 @@ export class MsEdgeTTS {
   /**
    * Writes raw audio synthesised from text in real-time to a {@link Readable}. Uses a basic {@link _SSMLTemplate SML template}.
    *
-   * @param input the text to synthesise. Can include SSML elements.
+   * @param input the text to synthesis. Can include SSML elements.
    * @param options (optional) {@link ProsodyOptions}
    * @returns {Readable} - a `stream.Readable` with the audio data
    */
@@ -345,7 +345,7 @@ export class MsEdgeTTS {
       });
 
       readable.on("end", () => {
-        resolve(Buffer.concat(data).buffer);
+        resolve(Buffer.concat(data).buffer as ArrayBuffer);
       });
 
       readable.on("error", (err) => {
