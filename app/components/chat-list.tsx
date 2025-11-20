@@ -103,14 +103,10 @@ export function ChatItem(props: {
 }
 
 export function ChatList(props: { narrow?: boolean }) {
-  const [sessions, selectedIndex, selectSession, moveSession] = useChatStore(
-    (state) => [
-      state.sessions,
-      state.currentSessionIndex,
-      state.selectSession,
-      state.moveSession,
-    ],
-  );
+  const sessions = useChatStore((state) => state.sessions);
+  const selectedIndex = useChatStore((state) => state.currentSessionIndex);
+  const selectSession = useChatStore((state) => state.selectSession);
+  const moveSession = useChatStore((state) => state.moveSession);
   const chatStore = useChatStore();
   const navigate = useNavigate();
   const isMobileScreen = useMobileScreen();
@@ -140,31 +136,32 @@ export function ChatList(props: { narrow?: boolean }) {
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            {sessions.map((item, i) => (
-              <ChatItem
-                title={item.topic}
-                time={new Date(item.lastUpdate).toLocaleString()}
-                count={item.messages.length}
-                key={item.id}
-                id={item.id}
-                index={i}
-                selected={i === selectedIndex}
-                onClick={() => {
-                  navigate(Path.Chat);
-                  selectSession(i);
-                }}
-                onDelete={async () => {
-                  if (
-                    (!props.narrow && !isMobileScreen) ||
-                    (await showConfirm(Locale.Home.DeleteChat))
-                  ) {
-                    chatStore.deleteSession(i);
-                  }
-                }}
-                narrow={props.narrow}
-                mask={item.mask}
-              />
-            ))}
+            {Array.isArray(sessions) &&
+              sessions.map((item, i) => (
+                <ChatItem
+                  title={item.topic}
+                  time={new Date(item.lastUpdate).toLocaleString()}
+                  count={item.messages.length}
+                  key={item.id}
+                  id={item.id}
+                  index={i}
+                  selected={i === selectedIndex}
+                  onClick={() => {
+                    navigate(Path.Chat);
+                    selectSession(i);
+                  }}
+                  onDelete={async () => {
+                    if (
+                      (!props.narrow && !isMobileScreen) ||
+                      (await showConfirm(Locale.Home.DeleteChat))
+                    ) {
+                      chatStore.deleteSession(i);
+                    }
+                  }}
+                  narrow={props.narrow}
+                  mask={item.mask}
+                />
+              ))}
             {provided.placeholder}
           </div>
         )}

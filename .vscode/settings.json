@@ -2,7 +2,12 @@
     "cSpell.words": [
         "alaw",
         "ALAW",
+        "dont",
+        "eslintcache",
         "fortaine",
+        "istanbul",
+        "jscoverage",
+        "jspm",
         "kbitrate",
         "KBITRATE",
         "kbps",
@@ -14,12 +19,17 @@
         "mstts",
         "mulaw",
         "MULAW",
+        "nuxt",
+        "Nuxt",
         "proxychains",
         "readaloud",
+        "setshow",
         "ssml",
         "SSML",
         "synthesised",
         "truesilk",
-        "TRUESILK"
+        "TRUESILK",
+        "vuepress",
+        "Vuepress"
     ]
 }
