@@ -1,7 +1,6 @@
-import EmojiPicker, {
+import {
   Emoji,
   EmojiStyle,
-  Theme as EmojiTheme,
 } from "emoji-picker-react";
 
 import { ModelType } from "../store";
@@ -27,22 +26,6 @@ export function getEmojiUrl(unified: string, style: EmojiStyle) {
   // Old CDN broken, so I had to switch to this one
   // Author: https://github.com/H0llyW00dzZ
   return `https://fastly.jsdelivr.net/npm/emoji-datasource-apple/img/${style}/64/${unified}.png`;
-}
-
-export function AvatarPicker(props: {
-  onEmojiClick: (emojiId: string) => void;
-}) {
-  return (
-    <EmojiPicker
-      width={"100%"}
-      lazyLoadEmojis
-      theme={EmojiTheme.AUTO}
-      getEmojiUrl={getEmojiUrl}
-      onEmojiClick={(e) => {
-        props.onEmojiClick(e.unified);
-      }}
-    />
-  );
 }
 
 export function Avatar(props: { model?: ModelType; avatar?: string }) {

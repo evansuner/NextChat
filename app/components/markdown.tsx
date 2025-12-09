@@ -7,7 +7,6 @@ import RemarkGfm from "remark-gfm";
 import RehypeHighlight from "rehype-highlight";
 import { useRef, useState, RefObject, useEffect, useMemo } from "react";
 import { copyToClipboard, useWindowSize } from "../utils";
-import mermaid from "mermaid";
 import Locale from "../locales";
 import LoadingIcon from "../icons/three-dots.svg";
 import ReloadButtonIcon from "../icons/reload.svg";
@@ -31,14 +30,21 @@ export function Mermaid(props: { code: string }) {
 
   useEffect(() => {
     if (props.code && ref.current) {
-      mermaid
-        .run({
-          nodes: [ref.current],
-          suppressErrors: true,
+      import("mermaid")
+        .then((mermaid) => {
+          mermaid.default
+            .run({
+              nodes: [ref.current!],
+              suppressErrors: true,
+            })
+            .catch((e) => {
+              setHasError(true);
+              console.error("[Mermaid] ", e.message);
+            });
         })
         .catch((e) => {
           setHasError(true);
-          console.error("[Mermaid] ", e.message);
+          console.error("[Mermaid] load failed", e);
         });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

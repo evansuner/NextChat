@@ -33,9 +33,11 @@ import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
-    <div className={clsx("no-dark", styles["loading-content"])}>
-      {!props.noLogo && <BotIcon />}
-      <LoadingIcon />
+    <div className={styles.container}>
+      <div className={clsx("no-dark", styles["loading-content"])}>
+        {!props.noLogo && <BotIcon />}
+        <LoadingIcon />
+      </div>
     </div>
   );
 }
