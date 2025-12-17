@@ -1,0 +1,9 @@
+services:
+  chatgpt-next-web:
+    container_name: nextchat
+    image: registry.evanidea.cc/next-chat:latest
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    restart: unless-stopped
