@@ -4,9 +4,6 @@ import "./styles/markdown.scss";
 import "./styles/highlight.scss";
 import { getClientConfig } from "./config/client";
 import type { Metadata, Viewport } from "next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
-import { GoogleTagManager, GoogleAnalytics } from "@next/third-parties/google";
-import { getServerSideConfig } from "./config/server";
 
 export const metadata: Metadata = {
   title: "NextChat",
@@ -32,7 +29,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const serverConfig = getServerSideConfig();
 
   return (
     <html lang="en">
@@ -51,21 +47,6 @@ export default function RootLayout({
       </head>
       <body>
         {children}
-        {serverConfig?.isVercel && (
-          <>
-            <SpeedInsights />
-          </>
-        )}
-        {serverConfig?.gtmId && (
-          <>
-            <GoogleTagManager gtmId={serverConfig.gtmId} />
-          </>
-        )}
-        {serverConfig?.gaId && (
-          <>
-            <GoogleAnalytics gaId={serverConfig.gaId} />
-          </>
-        )}
       </body>
     </html>
   );
