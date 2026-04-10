@@ -201,9 +201,11 @@ export const useAppConfig = createPersistStore(
       const state = persistedState as ChatConfig | undefined;
       if (!state) return { ...currentState };
       const models = currentState.models.slice();
-      state.models.forEach((pModel) => {
+      state.models?.forEach((pModel) => {
         const idx = models.findIndex(
-          (v) => v.name === pModel.name && v.provider === pModel.provider,
+          (v) =>
+            v.name === pModel.name &&
+            v.provider?.id === pModel.provider?.id,
         );
         if (idx !== -1) models[idx] = pModel;
         else models.push(pModel);

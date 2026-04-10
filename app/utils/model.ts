@@ -76,7 +76,8 @@ export function collectModelTable(
   // server custom models
   customModels
     .split(",")
-    .filter((v) => !!v && v.length > 0)
+    .filter((v) => !!v && v.trim().length > 0)
+    .map((v) => v.trim())
     .forEach((m) => {
       const available = !m.startsWith("-");
       const nameConfig =

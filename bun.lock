@@ -2130,7 +2130,7 @@
 
     "router": ["router@2.2.0", "https://registry.npmjs.com/router/-/router-2.2.0.tgz", { "dependencies": { "debug": "^4.4.0", "depd": "^2.0.0", "is-promise": "^4.0.0", "parseurl": "^1.3.3", "path-to-regexp": "^8.0.0" } }, "sha512-nLTrUKm2UyiL7rlhapu/Zl45FwNgkZGaCpZbIHajDYgwlJCOzLSk+cIPAnsEqV955GjILJnKbdQC1nVPz+gAYQ=="],
 
-    "rt-client": ["rt-client@https://github.com/Azure-Samples/aoai-realtime-audio-sdk/releases/download/js/v0.5.0/rt-client-0.5.0.tgz", { "dependencies": { "ws": "^8.18.0" } }],
+    "rt-client": ["rt-client@https://github.com/Azure-Samples/aoai-realtime-audio-sdk/releases/download/js/v0.5.0/rt-client-0.5.0.tgz", { "dependencies": { "ws": "^8.18.0" } }, "sha512-UznSFgzhUP0CgIAw5Cszn4+skseLYrYDCLrQ9g6noHOsZH0dgFSwRtMcniM+qyNFqgcbEXmBlZJwBOm2u9dHvQ=="],
 
     "run-parallel": ["run-parallel@1.2.0", "https://registry.npmjs.com/run-parallel/-/run-parallel-1.2.0.tgz", { "dependencies": { "queue-microtask": "^1.2.2" } }, "sha512-5l4VyZR86LZ/lDxZTR6jqL8AFE2S0IFLMP26AbjsLVADxHdhB/c0GUsH+y39UfCi3dzz8OlQuPmnaJOMoDHQBA=="],
 
@@ -2696,7 +2696,7 @@
 
     "browserslist/baseline-browser-mapping": ["baseline-browser-mapping@2.8.29", "https://registry.npmjs.com/baseline-browser-mapping/-/baseline-browser-mapping-2.8.29.tgz", { "bin": { "baseline-browser-mapping": "dist/cli.js" } }, "sha512-sXdt2elaVnhpDNRDz+1BDx1JQoJRuNk7oVlAlbGiFkLikHCAQiccexF/9e91zVi6RCgqspl04aP+6Cnl9zRLrA=="],
 
-    "browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "chalk/supports-color": ["supports-color@7.2.0", "https://registry.npmjs.com/supports-color/-/supports-color-7.2.0.tgz", { "dependencies": { "has-flag": "^4.0.0" } }, "sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw=="],
 
@@ -2902,7 +2902,7 @@
 
     "mlly/pkg-types": ["pkg-types@1.3.1", "https://registry.npmjs.com/pkg-types/-/pkg-types-1.3.1.tgz", { "dependencies": { "confbox": "^0.1.8", "mlly": "^1.7.4", "pathe": "^2.0.1" } }, "sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ=="],
 
-    "next/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "next/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "no-case/tslib": ["tslib@2.8.1", "https://registry.npmjs.com/tslib/-/tslib-2.8.1.tgz", {}, "sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w=="],
 
@@ -3906,7 +3906,7 @@
 
     "@istanbuljs/load-nyc-config/find-up/locate-path/p-locate/p-limit": ["p-limit@2.3.0", "https://registry.npmmirror.com/p-limit/-/p-limit-2.3.0.tgz#3dd33c647a214fdfffd835933eb086da0dc21db1", { "dependencies": { "p-try": "^2.0.0" } }, "sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w=="],
 
-    "@jest/transform/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "@jest/transform/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "@jest/transform/@babel/core/@babel/helper-compilation-targets/browserslist/electron-to-chromium": ["electron-to-chromium@1.5.5", "https://registry.npmmirror.com/electron-to-chromium/-/electron-to-chromium-1.5.5.tgz#03bfdf422bdd2c05ee2657efedde21264a1a566b", {}, "sha512-QR7/A7ZkMS8tZuoftC/jfqNkZLQO779SSW3YuZHP4eXpj3EffGLFcB/Xu9AAZQzLccTiCV+EmUo3ha4mQ9wnlA=="],
 
@@ -4010,7 +4010,7 @@
 
     "istanbul-lib-instrument/@babel/core/@babel/generator/@jridgewell/trace-mapping/@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.0", "https://registry.npmmirror.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.0.tgz#3188bcb273a414b0d215fd22a58540b989b9409a", {}, "sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ=="],
 
-    "istanbul-lib-instrument/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "istanbul-lib-instrument/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "istanbul-lib-instrument/@babel/core/@babel/helper-compilation-targets/browserslist/electron-to-chromium": ["electron-to-chromium@1.5.5", "https://registry.npmmirror.com/electron-to-chromium/-/electron-to-chromium-1.5.5.tgz#03bfdf422bdd2c05ee2657efedde21264a1a566b", {}, "sha512-QR7/A7ZkMS8tZuoftC/jfqNkZLQO779SSW3YuZHP4eXpj3EffGLFcB/Xu9AAZQzLccTiCV+EmUo3ha4mQ9wnlA=="],
 
@@ -4020,7 +4020,7 @@
 
     "jest-config/@babel/core/@babel/generator/@jridgewell/trace-mapping/@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.0", "https://registry.npmmirror.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.0.tgz#3188bcb273a414b0d215fd22a58540b989b9409a", {}, "sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ=="],
 
-    "jest-config/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "jest-config/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "jest-config/@babel/core/@babel/helper-compilation-targets/browserslist/electron-to-chromium": ["electron-to-chromium@1.5.5", "https://registry.npmmirror.com/electron-to-chromium/-/electron-to-chromium-1.5.5.tgz#03bfdf422bdd2c05ee2657efedde21264a1a566b", {}, "sha512-QR7/A7ZkMS8tZuoftC/jfqNkZLQO779SSW3YuZHP4eXpj3EffGLFcB/Xu9AAZQzLccTiCV+EmUo3ha4mQ9wnlA=="],
 
@@ -4028,7 +4028,7 @@
 
     "jest-config/@babel/core/@babel/helper-compilation-targets/browserslist/update-browserslist-db": ["update-browserslist-db@1.1.0", "https://registry.npmmirror.com/update-browserslist-db/-/update-browserslist-db-1.1.0.tgz#7ca61c0d8650766090728046e416a8cde682859e", { "dependencies": { "escalade": "^3.1.2", "picocolors": "^1.0.1" }, "bin": { "update-browserslist-db": "cli.js" } }, "sha512-EdRAaAyk2cUE1wOf2DkEhzxqOQvFOoRJFNS6NeyJ01Gp2beMRpBAINjM2iDXE3KCuKhwnvHIQCJm6ThL2Z+HzQ=="],
 
-    "jest-snapshot/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "jest-snapshot/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "jest-snapshot/@babel/core/@babel/helper-compilation-targets/browserslist/electron-to-chromium": ["electron-to-chromium@1.5.5", "https://registry.npmmirror.com/electron-to-chromium/-/electron-to-chromium-1.5.5.tgz#03bfdf422bdd2c05ee2657efedde21264a1a566b", {}, "sha512-QR7/A7ZkMS8tZuoftC/jfqNkZLQO779SSW3YuZHP4eXpj3EffGLFcB/Xu9AAZQzLccTiCV+EmUo3ha4mQ9wnlA=="],
 
@@ -4118,7 +4118,7 @@
 
     "babel-plugin-istanbul/istanbul-lib-instrument/@babel/core/@babel/generator/@jridgewell/trace-mapping/@jridgewell/sourcemap-codec": ["@jridgewell/sourcemap-codec@1.5.0", "https://registry.npmmirror.com/@jridgewell/sourcemap-codec/-/sourcemap-codec-1.5.0.tgz#3188bcb273a414b0d215fd22a58540b989b9409a", {}, "sha512-gv3ZRaISU3fjPAgNsriBRqGWQL6quFx04YMPW/zD8XMLsU32mhCCbfbO6KZFLjvYpCZ8zyDEgqsgf+PwPaM7GQ=="],
 
-    "babel-plugin-istanbul/istanbul-lib-instrument/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}],
+    "babel-plugin-istanbul/istanbul-lib-instrument/@babel/core/@babel/helper-compilation-targets/browserslist/caniuse-lite": ["caniuse-lite@https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001774.tgz", {}, "sha512-DDdwPGz99nmIEv216hKSgLD+D4ikHQHjBC/seF98N9CPqRX4M5mSxT9eTV6oyisnJcuzxtZy4n17yKKQYmYQOA=="],
 
     "babel-plugin-istanbul/istanbul-lib-instrument/@babel/core/@babel/helper-compilation-targets/browserslist/electron-to-chromium": ["electron-to-chromium@1.5.5", "https://registry.npmmirror.com/electron-to-chromium/-/electron-to-chromium-1.5.5.tgz#03bfdf422bdd2c05ee2657efedde21264a1a566b", {}, "sha512-QR7/A7ZkMS8tZuoftC/jfqNkZLQO779SSW3YuZHP4eXpj3EffGLFcB/Xu9AAZQzLccTiCV+EmUo3ha4mQ9wnlA=="],
 

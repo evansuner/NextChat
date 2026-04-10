@@ -2,6 +2,6 @@ import { ModelConfig } from "../store";
 import { type Mask } from "../store/mask";
 
 export type BuiltinMask = Omit<Mask, "id" | "modelConfig"> & {
-  builtin: Boolean;
+  builtin: boolean;
   modelConfig: Partial<ModelConfig>;
 };
