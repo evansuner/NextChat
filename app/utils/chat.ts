@@ -141,6 +141,13 @@ export function base64Image2Blob(base64Data: string, contentType: string) {
   return new Blob([byteArray], { type: contentType });
 }
 
+// Extend the Window interface to include _SW_ENABLED
+declare global {
+  interface Window {
+    _SW_ENABLED?: boolean;
+  }
+}
+
 export function uploadImage(file: Blob): Promise<string> {
   if (!window._SW_ENABLED) {
     // if serviceWorker register error, using compressImage

@@ -185,8 +185,10 @@ export class ClaudeApi implements LLMApi {
 
       model: modelConfig.model,
       max_tokens: modelConfig.max_tokens,
-      temperature: modelConfig.temperature,
-      top_p: modelConfig.top_p,
+      // Anthropic does not allow both temperature and top_p at the same time
+      ...(modelConfig.temperature != null
+        ? { temperature: modelConfig.temperature }
+        : { top_p: modelConfig.top_p }),
       // top_k: modelConfig.top_k,
       top_k: 5,
     };

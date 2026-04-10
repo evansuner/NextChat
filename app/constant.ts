@@ -38,6 +38,8 @@ export const SILICONFLOW_BASE_URL = "https://api.siliconflow.cn";
 
 export const AI302_BASE_URL = "https://api.302.ai";
 
+export const OPENROUTER_BASE_URL = "https://openrouter.ai/api";
+
 export const CACHE_URL_PREFIX = "/api/cache";
 export const UPLOAD_URL = `${CACHE_URL_PREFIX}/upload`;
 
@@ -75,6 +77,7 @@ export enum ApiPath {
   DeepSeek = "/api/deepseek",
   SiliconFlow = "/api/siliconflow",
   "302.AI" = "/api/302ai",
+  OpenRouter = "/api/openrouter",
 }
 
 export enum SlotID {
@@ -134,6 +137,7 @@ export enum ServiceProvider {
   DeepSeek = "DeepSeek",
   SiliconFlow = "SiliconFlow",
   "302.AI" = "302.AI",
+  OpenRouter = "OpenRouter",
 }
 
 // Google API safety settings, see https://ai.google.dev/gemini-api/docs/safety-settings
@@ -161,6 +165,7 @@ export enum ModelProvider {
   DeepSeek = "DeepSeek",
   SiliconFlow = "SiliconFlow",
   "302.AI" = "302.AI",
+  OpenRouter = "OpenRouter",
 }
 
 export const Stability = {
@@ -276,6 +281,11 @@ export const AI302 = {
   ChatPath: "v1/chat/completions",
   EmbeddingsPath: "jina/v1/embeddings",
   ListModelPath: "v1/models?llm=1",
+};
+
+export const OpenRouter = {
+  ExampleEndpoint: OPENROUTER_BASE_URL,
+  ChatPath: "v1/chat/completions",
 };
 
 export const DEFAULT_INPUT_TEMPLATE = `{{input}}`; // input / time / model / lang
@@ -502,122 +512,58 @@ export const EXCLUDE_VISION_MODEL_REGEXES = [/claude-3-5-haiku-20241022/];
 const openaiModels = [
   // As of July 2024, gpt-4o-mini should be used in place of gpt-3.5-turbo,
   // as it is cheaper, more capable, multimodal, and just as fast. gpt-3.5-turbo is still available for use in the API.
-  "gpt-3.5-turbo",
-  "gpt-3.5-turbo-1106",
-  "gpt-3.5-turbo-0125",
-  "gpt-4",
-  "gpt-4-0613",
-  "gpt-4-32k",
-  "gpt-4-32k-0613",
-  "gpt-4-turbo",
-  "gpt-4-turbo-preview",
-  "gpt-4.1",
-  "gpt-4.1-2025-04-14",
-  "gpt-4.1-mini",
-  "gpt-4.1-mini-2025-04-14",
-  "gpt-4.1-nano",
-  "gpt-4.1-nano-2025-04-14",
-  "gpt-4.5-preview",
-  "gpt-4.5-preview-2025-02-27",
-  "gpt-5-chat",
-  "gpt-5-mini",
-  "gpt-5-nano",
+  "gpt-5.4",
+  "gpt-5.4-pro",
+  "gpt-5.4-mini",
+  "gpt-5.4-nano",
   "gpt-5",
-  "gpt-5-chat-2025-01-01-preview",
-  "gpt-4o",
-  "gpt-4o-2024-05-13",
-  "gpt-4o-2024-08-06",
-  "gpt-4o-2024-11-20",
-  "chatgpt-4o-latest",
-  "gpt-4o-mini",
-  "gpt-4o-mini-2024-07-18",
-  "gpt-4-vision-preview",
-  "gpt-4-turbo-2024-04-09",
-  "gpt-4-1106-preview",
-  "dall-e-3",
-  "o1-mini",
-  "o1-preview",
-  "o3-mini",
-  "o3",
-  "o4-mini",
+  "gpt-4.1",
+  "gpt-image-1.5"
 ];
 
 const googleModels = [
-  "gemini-1.5-pro-latest",
-  "gemini-1.5-pro",
-  "gemini-1.5-pro-002",
-  "gemini-1.5-flash-latest",
-  "gemini-1.5-flash-8b-latest",
-  "gemini-1.5-flash",
-  "gemini-1.5-flash-8b",
-  "gemini-1.5-flash-002",
-  "learnlm-1.5-pro-experimental",
-  "gemini-exp-1206",
-  "gemini-2.0-flash",
-  "gemini-2.0-flash-exp",
-  "gemini-2.0-flash-lite-preview-02-05",
-  "gemini-2.0-flash-thinking-exp",
-  "gemini-2.0-flash-thinking-exp-1219",
-  "gemini-2.0-flash-thinking-exp-01-21",
-  "gemini-2.0-pro-exp",
-  "gemini-2.0-pro-exp-02-05",
-  "gemini-2.5-pro-preview-06-05",
-  "gemini-2.5-pro",
+  "gemini-3.1-flash-lite-preview",
+  "gemini-3.1-flash-image-preview",
+  "gemini-3.1-pro-preview",
+  "gemini-3-flash-preview",
+  "gemini-3-pro-image-preview",
+  "gemini-3-pro-preview"
 ];
 
 const anthropicModels = [
-  "claude-instant-1.2",
-  "claude-2.0",
-  "claude-2.1",
-  "claude-3-sonnet-20240229",
-  "claude-3-opus-20240229",
-  "claude-3-opus-latest",
-  "claude-3-haiku-20240307",
-  "claude-3-5-haiku-20241022",
-  "claude-3-5-haiku-latest",
-  "claude-3-5-sonnet-20240620",
-  "claude-3-5-sonnet-20241022",
-  "claude-3-5-sonnet-latest",
-  "claude-3-7-sonnet-20250219",
-  "claude-3-7-sonnet-latest",
-  "claude-sonnet-4-20250514",
-  "claude-opus-4-20250514",
+  "claude-opus-4-6",
+  "claude-sonnet-4-6",
 ];
 
 const baiduModels = [
-  "ernie-4.0-turbo-8k",
-  "ernie-4.0-8k",
-  "ernie-4.0-8k-preview",
-  "ernie-4.0-8k-preview-0518",
-  "ernie-4.0-8k-latest",
-  "ernie-3.5-8k",
-  "ernie-3.5-8k-0205",
-  "ernie-speed-128k",
-  "ernie-speed-8k",
-  "ernie-lite-8k",
-  "ernie-tiny-8k",
+  "ernie-5.0",
+  "ernie-x1.1",
+  "ernie-4.5-turbo-128k",
 ];
 
 const bytedanceModels = [
-  "Doubao-lite-4k",
-  "Doubao-lite-32k",
-  "Doubao-lite-128k",
-  "Doubao-pro-4k",
-  "Doubao-pro-32k",
-  "Doubao-pro-128k",
+  "doubao-seed-2.0-pro",
+  "doubao-seed-2.0-lite",
+  "doubao-seed-2.0-mini",
+  "doubao-seed-2.0-code",
+  "doubao-seed-1.8",
+  "doubao-seed-character",
+  "doubao-seed-code",
+  "doubao-seed-1.6",
+  "doubao-seed-1.6-lite",
+  "doubao-seed-1.6-flash",
+  "doubao-seed-1.6-vision",
+  "doubao-seed-translation",
+  "doubao-1.5-pro-32k",
+  "doubao-1.5-lite-32k",
+  "doubao-1.5-vision-pro"
 ];
 
+
 const alibabaModes = [
-  "qwen-turbo",
-  "qwen-plus",
-  "qwen-max",
-  "qwen-max-0428",
-  "qwen-max-0403",
-  "qwen-max-0107",
-  "qwen-max-longcontext",
-  "qwen-omni-turbo",
-  "qwen-vl-plus",
-  "qwen-vl-max",
+  "qwen3-max",
+  "qwen3.6-plus",
+  "qwen3.5-flash",
 ];
 
 const tencentModels = [
@@ -654,32 +600,16 @@ const iflytekModels = [
 const deepseekModels = ["deepseek-chat", "deepseek-coder", "deepseek-reasoner"];
 
 const xAIModes = [
-  "grok-beta",
-  "grok-2",
-  "grok-2-1212",
-  "grok-2-latest",
-  "grok-vision-beta",
-  "grok-2-vision-1212",
-  "grok-2-vision",
-  "grok-2-vision-latest",
-  "grok-3-mini-fast-beta",
-  "grok-3-mini-fast",
-  "grok-3-mini-fast-latest",
-  "grok-3-mini-beta",
-  "grok-3-mini",
-  "grok-3-mini-latest",
-  "grok-3-fast-beta",
-  "grok-3-fast",
-  "grok-3-fast-latest",
-  "grok-3-beta",
-  "grok-3",
-  "grok-3-latest",
-  "grok-4",
-  "grok-4-0709",
-  "grok-4-fast-non-reasoning",
-  "grok-4-fast-reasoning",
-  "grok-code-fast-1",
-];
+  "grok-4.20-0309-reasoning",
+  "grok-4.20-0309-non-reasoning",
+  "grok-4.20-multi-agent-0309",
+  "grok-4-1-fast-reasoning",
+  "grok-4-1-fast-non-reasoning",
+  "grok-imagine-image-pro",
+  "grok-imagine-image",
+  "grok-imagine-video"
+]
+;
 
 const chatglmModels = [
   "glm-4-plus",
@@ -717,6 +647,8 @@ const siliconflowModels = [
   "Pro/deepseek-ai/DeepSeek-R1",
   "Pro/deepseek-ai/DeepSeek-V3",
 ];
+
+const openrouterModels = ["deepseek/deepseek-chat", "x-ai/grok-4.20"];
 
 const ai302Models = [
   "deepseek-chat",
@@ -908,6 +840,17 @@ export const DEFAULT_MODELS = [
       providerName: "302.AI",
       providerType: "ai302",
       sorted: 15,
+    },
+  })),
+  ...openrouterModels.map((name) => ({
+    name,
+    available: true,
+    sorted: seq++,
+    provider: {
+      id: "openrouter",
+      providerName: "OpenRouter",
+      providerType: "openrouter",
+      sorted: 16,
     },
   })),
 ] as const;

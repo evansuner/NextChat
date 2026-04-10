@@ -1515,7 +1515,7 @@ function _Chat() {
       if (!isVisionModel(currentModel)) {
         return;
       }
-      const items = (event.clipboardData || window.clipboardData).items;
+      const items = event.clipboardData.items;
       for (const item of items) {
         if (item.kind === "file" && item.type.startsWith("image/")) {
           event.preventDefault();
