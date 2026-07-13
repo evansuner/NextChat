@@ -4,18 +4,13 @@
   "license": "mit",
   "type": "module",
   "scripts": {
-    "mask": "npx tsx app/masks/build.ts",
-    "mask:watch": "npx watch \"yarn mask\" app/masks",
-    "dev": "concurrently -r \"yarn run mask:watch\" \"next dev\"",
-    "build": "yarn mask && cross-env BUILD_MODE=standalone next build",
+    "dev": "next dev",
+    "build": "cross-env BUILD_MODE=standalone next build",
     "start": "next start",
     "lint": "next lint",
-    "docker": "docker buildx build --no-cache --platform linux/amd64 -t registry.evanidea.cc/next-chat:latest --push .",
     "prompts": "node ./scripts/fetch-prompts.mjs",
     "prepare": "husky",
-    "proxy-dev": "sh ./scripts/init-proxy.sh && proxychains -f ./scripts/proxychains.conf yarn dev",
-    "test": "node --no-warnings --experimental-vm-modules $(yarn bin jest) --watch",
-    "test:ci": "node --no-warnings --experimental-vm-modules$ (yarn bin jest) --ci"
+    "proxy-dev": "sh ./scripts/init-proxy.sh && proxychains -f ./scripts/proxychains.conf yarn dev"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx,css,md,html,json,xml}": "prettier --write"

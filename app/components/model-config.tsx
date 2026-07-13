@@ -277,7 +277,7 @@ export function ModelConfigList(props: {
         subTitle={Locale.Settings.CompressModel.SubTitle}
       >
         <Select
-          className="w-3/5 [&_select]:max-w-full [&_select]:whitespace-normal"
+          className="w-4/5 [&_select]:max-w-full [&_select]:whitespace-normal"
           aria-label={Locale.Settings.CompressModel.Title}
           value={compressModelValue}
           onChange={(e) => {
