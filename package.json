@@ -27,7 +27,7 @@
     "@svgr/webpack": "^8.1.0",
     "axios": "^1.13.2",
     "baseline-browser-mapping": "^2.10.0",
-    "caniuse-lite": "^1.0.30001774",
+    "caniuse-lite": "^1.0.30001805",
     "clsx": "^2.1.1",
     "emoji-picker-react": "^4.15.1",
     "fuse.js": "^7.1.0",

@@ -62,11 +62,12 @@ export interface RequestPayload {
   stream?: boolean;
   model: string;
   temperature: number;
-  presence_penalty: number;
-  frequency_penalty: number;
+  presence_penalty?: number;
+  frequency_penalty?: number;
   top_p: number;
   max_tokens?: number;
   max_completion_tokens?: number;
+  reasoning_effort?: string;
 }
 
 export interface DalleRequestPayload {
@@ -199,11 +200,8 @@ export class ChatGPTApi implements LLMApi {
     const isO1OrO3 =
       options.config.model.startsWith("o1") ||
       options.config.model.startsWith("o3") ||
-      options.config.model.startsWith("o4");
+      options.config.model.startsWith("o4-mini");
     const isGpt5 = options.config.model.startsWith("gpt-5");
-    // Reasoning models: o-series models don't support temperature/top_p/presence_penalty/frequency_penalty
-    // gpt-5 models support these parameters normally
-    const isReasoningModel = isO1OrO3;
     if (isDalle3) {
       const prompt = getMessageTextContent(
         options.messages.slice(-1)?.pop() as any,
@@ -229,32 +227,40 @@ export class ChatGPTApi implements LLMApi {
           messages.push({ role: v.role, content });
       }
 
-      // O-series reasoning models don't support temperature, top_p, presence_penalty, frequency_penalty
+      // O1 not support image, tools (plugin in ChatGPTNextWeb) and system, stream, logprobs, temperature, top_p, n, presence_penalty, frequency_penalty yet.
       requestPayload = {
         messages,
         stream: options.config.stream,
         model: modelConfig.model,
-        temperature: !isReasoningModel ? modelConfig.temperature : 1,
-        presence_penalty: !isReasoningModel ? modelConfig.presence_penalty : 0,
-        frequency_penalty: !isReasoningModel ? modelConfig.frequency_penalty : 0,
-        top_p: !isReasoningModel ? modelConfig.top_p : 1,
-        // max_tokens is deprecated, use max_completion_tokens instead
+        temperature: !isO1OrO3 && !isGpt5 ? modelConfig.temperature : 1,
+        presence_penalty: !isO1OrO3 ? modelConfig.presence_penalty : 0,
+        frequency_penalty: !isO1OrO3 ? modelConfig.frequency_penalty : 0,
+        top_p: !isO1OrO3 ? modelConfig.top_p : 1,
+        // max_tokens: Math.max(modelConfig.max_tokens, 1024),
+        // Please do not ask me why not send max_tokens, no reason, this param is just shit, I dont want to explain anymore.
       };
 
-      // Use max_completion_tokens for all models (max_tokens is deprecated)
-      if (isO1OrO3) {
+      if (isGpt5) {
+        // Remove max_tokens if present
+        delete requestPayload.max_tokens;
+        // Add max_completion_tokens (or max_completion_tokens if that's what you meant)
+        requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
+      } else if (isO1OrO3) {
         // by default the o1/o3 models will not attempt to produce output that includes markdown formatting
         // manually add "Formatting re-enabled" developer message to encourage markdown inclusion in model responses
+        // (https://learn.microsoft.com/en-us/azure/ai-services/openai/how-to/reasoning?tabs=python-secure#markdown-output)
         requestPayload["messages"].unshift({
           role: "developer",
           content: "Formatting re-enabled",
         });
+
+        // o1/o3 uses max_completion_tokens to control the number of tokens (https://platform.openai.com/docs/guides/reasoning#controlling-costs)
+        requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
       }
 
+      // add max_tokens to vision model
       if (visionModel && !isO1OrO3 && !isGpt5) {
-        requestPayload["max_completion_tokens"] = Math.max(modelConfig.max_tokens, 4000);
-      } else {
-        requestPayload["max_completion_tokens"] = modelConfig.max_tokens;
+        requestPayload["max_tokens"] = Math.max(modelConfig.max_tokens, 4000);
       }
     }
 

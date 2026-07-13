@@ -1,37 +1,39 @@
-// To store message streaming controller
-export const ChatControllerPool = {
-  controllers: {} as Record<string, AbortController>,
+class ChatControllerPoolClass {
+  private controllers = new Map<string, AbortController>();
+
+  private makeKey(sessionId: string, messageId: string | number) {
+    return `${sessionId}:${messageId}`;
+  }
 
   addController(
     sessionId: string,
-    messageId: string,
+    messageId: string | number,
     controller: AbortController,
   ) {
-    const key = this.key(sessionId, messageId);
-    this.controllers[key] = controller;
-    return key;
-  },
+    this.controllers.set(this.makeKey(sessionId, messageId), controller);
+  }
 
-  stop(sessionId: string, messageId: string) {
-    const key = this.key(sessionId, messageId);
-    const controller = this.controllers[key];
+  remove(sessionId: string, messageId: string | number) {
+    this.controllers.delete(this.makeKey(sessionId, messageId));
+  }
+
+  stop(sessionId: string, messageId: string | number) {
+    const key = this.makeKey(sessionId, messageId);
+    const controller = this.controllers.get(key);
     controller?.abort();
-  },
+    this.controllers.delete(key);
+  }
 
   stopAll() {
-    Object.values(this.controllers).forEach((v) => v.abort());
-  },
+    this.controllers.forEach((controller) => controller.abort());
+    this.controllers.clear();
+  }
 
   hasPending() {
-    return Object.values(this.controllers).length > 0;
-  },
+    return this.controllers.size > 0;
+  }
+}
 
-  remove(sessionId: string, messageId: string) {
-    const key = this.key(sessionId, messageId);
-    delete this.controllers[key];
-  },
+export const ChatControllerPool = new ChatControllerPoolClass();
 
-  key(sessionId: string, messageIndex: string) {
-    return `${sessionId},${messageIndex}`;
-  },
-};
+export * from "./api";

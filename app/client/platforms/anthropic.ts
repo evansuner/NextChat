@@ -71,8 +71,6 @@ const ClaudeMapper = {
   system: "user",
 } as const;
 
-const keys = ["claude-2, claude-instant-1"];
-
 export class ClaudeApi implements LLMApi {
   speech(options: SpeechOptions): Promise<ArrayBuffer> {
     throw new Error("Method not implemented.");
@@ -226,7 +224,11 @@ export class ClaudeApi implements LLMApi {
           let chunkJson:
             | undefined
             | {
-                type: "content_block_delta" | "content_block_stop" | "message_delta" | "message_stop";
+                type:
+                  | "content_block_delta"
+                  | "content_block_stop"
+                  | "message_delta"
+                  | "message_stop";
                 content_block?: {
                   type: "tool_use";
                   id: string;
@@ -245,8 +247,11 @@ export class ClaudeApi implements LLMApi {
           // Handle refusal stop reason in message_delta
           if (chunkJson?.delta?.stop_reason === "refusal") {
             // Return a message to display to the user
-            const refusalMessage = "\n\n[Assistant refused to respond. Please modify your request and try again.]";
-            options.onError?.(new Error("Content policy violation: " + refusalMessage));
+            const refusalMessage =
+              "\n\n[Assistant refused to respond. Please modify your request and try again.]";
+            options.onError?.(
+              new Error("Content policy violation: " + refusalMessage),
+            );
             return refusalMessage;
           }
 

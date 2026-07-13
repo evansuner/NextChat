@@ -1,6 +1,5 @@
 import { getClientConfig } from "../config/client";
 import { SubmitKey } from "../store/config";
-import { SAAS_CHAT_UTM_URL } from "@/app/constant";
 
 const isApp = !!getClientConfig()?.isApp;
 
@@ -583,6 +582,17 @@ const cn = {
     FrequencyPenalty: {
       Title: "频率惩罚度 (frequency_penalty)",
       SubTitle: "值越大，越有可能降低重复字词",
+    },
+    ReasoningEffort: {
+      Title: "推理强度 (reasoning_effort)",
+      SubTitle:
+        "值越大，模型回复前思考越深入（仅部分推理模型支持，如 grok-4.5）",
+      Options: {
+        Default: "默认",
+        Low: "低",
+        Medium: "中",
+        High: "高",
+      },
     },
     TTS: {
       Enable: {

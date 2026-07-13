@@ -1,7 +1,7 @@
 services:
   chatgpt-next-web:
     container_name: nextchat
-    image: registry.evanidea.cc/next-chat:latest
+    image: krccr.ccs.tencentyun.com/evanidea/next-chat:latest
     build:
       context: .
       dockerfile: Dockerfile

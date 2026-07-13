@@ -32,6 +32,7 @@ export function ModelConfigList(props: {
             const [model, providerName] = getModelProvider(
               e.currentTarget.value,
             );
+            console.log("model", model, providerName);
             props.updateConfig((config) => {
               config.model = ModalConfigValidator.model(model);
               config.providerName = providerName as ServiceProvider;
@@ -155,6 +156,37 @@ export function ModelConfigList(props: {
               }}
             ></InputRange>
           </ListItem>
+
+          {props.modelConfig?.providerName == ServiceProvider.XAI ? (
+            <ListItem
+              title={Locale.Settings.ReasoningEffort.Title}
+              subTitle={Locale.Settings.ReasoningEffort.SubTitle}
+            >
+              <Select
+                aria-label={Locale.Settings.ReasoningEffort.Title}
+                value={props.modelConfig.reasoning_effort}
+                onChange={(e) => {
+                  props.updateConfig(
+                    (config) =>
+                      (config.reasoning_effort = e.currentTarget.value),
+                  );
+                }}
+              >
+                <option value="">
+                  {Locale.Settings.ReasoningEffort.Options.Default}
+                </option>
+                <option value="low">
+                  {Locale.Settings.ReasoningEffort.Options.Low}
+                </option>
+                <option value="medium">
+                  {Locale.Settings.ReasoningEffort.Options.Medium}
+                </option>
+                <option value="high">
+                  {Locale.Settings.ReasoningEffort.Options.High}
+                </option>
+              </Select>
+            </ListItem>
+          ) : null}
 
           <ListItem
             title={Locale.Settings.InjectSystemPrompts.Title}

@@ -260,109 +260,68 @@ export function getHeaders(ignoreHeaders: boolean = false) {
 
   function getConfig() {
     const modelConfig = chatStore.currentSession().mask.modelConfig;
-    const isGoogle = modelConfig.providerName === ServiceProvider.Google;
-    const isAzure = modelConfig.providerName === ServiceProvider.Azure;
-    const isAnthropic = modelConfig.providerName === ServiceProvider.Anthropic;
-    const isBaidu = modelConfig.providerName == ServiceProvider.Baidu;
-    const isByteDance = modelConfig.providerName === ServiceProvider.ByteDance;
-    const isAlibaba = modelConfig.providerName === ServiceProvider.Alibaba;
-    const isMoonshot = modelConfig.providerName === ServiceProvider.Moonshot;
-    const isIflytek = modelConfig.providerName === ServiceProvider.Iflytek;
-    const isDeepSeek = modelConfig.providerName === ServiceProvider.DeepSeek;
-    const isXAI = modelConfig.providerName === ServiceProvider.XAI;
-    const isChatGLM = modelConfig.providerName === ServiceProvider.ChatGLM;
-    const isSiliconFlow =
-      modelConfig.providerName === ServiceProvider.SiliconFlow;
-    const isAI302 = modelConfig.providerName === ServiceProvider["302.AI"];
-    const isOpenRouter =
-      modelConfig.providerName === ServiceProvider.OpenRouter;
+    const providerName = modelConfig.providerName as ServiceProvider;
+    const isBaidu = providerName === ServiceProvider.Baidu;
     const isEnabledAccessControl = accessStore.enabledAccessControl();
-    const apiKey = isGoogle
-      ? accessStore.googleApiKey
-      : isAzure
-      ? accessStore.azureApiKey
-      : isAnthropic
-      ? accessStore.anthropicApiKey
-      : isByteDance
-      ? accessStore.bytedanceApiKey
-      : isAlibaba
-      ? accessStore.alibabaApiKey
-      : isMoonshot
-      ? accessStore.moonshotApiKey
-      : isXAI
-      ? accessStore.xaiApiKey
-      : isDeepSeek
-      ? accessStore.deepseekApiKey
-      : isChatGLM
-      ? accessStore.chatglmApiKey
-      : isSiliconFlow
-      ? accessStore.siliconflowApiKey
-      : isIflytek
-      ? accessStore.iflytekApiKey && accessStore.iflytekApiSecret
-        ? accessStore.iflytekApiKey + ":" + accessStore.iflytekApiSecret
-        : ""
-      : isAI302
-      ? accessStore.ai302ApiKey
-      : isOpenRouter
-      ? accessStore.openrouterApiKey
-      : accessStore.openaiApiKey;
+
+    const providerApiKeys: Partial<Record<ServiceProvider, string>> = {
+      [ServiceProvider.Google]: accessStore.googleApiKey,
+      [ServiceProvider.Azure]: accessStore.azureApiKey,
+      [ServiceProvider.Anthropic]: accessStore.anthropicApiKey,
+      [ServiceProvider.ByteDance]: accessStore.bytedanceApiKey,
+      [ServiceProvider.Alibaba]: accessStore.alibabaApiKey,
+      [ServiceProvider.Moonshot]: accessStore.moonshotApiKey,
+      [ServiceProvider.XAI]: accessStore.xaiApiKey,
+      [ServiceProvider.DeepSeek]: accessStore.deepseekApiKey,
+      [ServiceProvider.ChatGLM]: accessStore.chatglmApiKey,
+      [ServiceProvider.SiliconFlow]: accessStore.siliconflowApiKey,
+      [ServiceProvider["302.AI"]]: accessStore.ai302ApiKey,
+      [ServiceProvider.OpenRouter]: accessStore.openrouterApiKey,
+    };
+
+    const iflytekApiKey =
+      accessStore.iflytekApiKey && accessStore.iflytekApiSecret
+        ? `${accessStore.iflytekApiKey}:${accessStore.iflytekApiSecret}`
+        : "";
+
+    const apiKey =
+      providerName === ServiceProvider.Iflytek
+        ? iflytekApiKey
+        : (providerApiKeys[providerName] ?? accessStore.openaiApiKey);
+
     return {
-      isGoogle,
-      isAzure,
-      isAnthropic,
+      providerName,
       isBaidu,
-      isByteDance,
-      isAlibaba,
-      isMoonshot,
-      isIflytek,
-      isDeepSeek,
-      isXAI,
-      isChatGLM,
-      isSiliconFlow,
-      isAI302,
-      isOpenRouter,
       apiKey,
       isEnabledAccessControl,
     };
   }
 
-  function getAuthHeader(): string {
-    return isAzure
-      ? "api-key"
-      : isAnthropic
-      ? "x-api-key"
-      : isGoogle
-      ? "x-goog-api-key"
-      : "Authorization";
+  function getAuthHeader(providerName: ServiceProvider): string {
+    switch (providerName) {
+      case ServiceProvider.Azure:
+        return "api-key";
+      case ServiceProvider.Anthropic:
+        return "x-api-key";
+      case ServiceProvider.Google:
+        return "x-goog-api-key";
+      default:
+        return "Authorization";
+    }
   }
 
-  const {
-    isGoogle,
-    isAzure,
-    isAnthropic,
-    isBaidu,
-    isByteDance,
-    isAlibaba,
-    isMoonshot,
-    isIflytek,
-    isDeepSeek,
-    isXAI,
-    isChatGLM,
-    isSiliconFlow,
-    isAI302,
-    isOpenRouter,
-    apiKey,
-    isEnabledAccessControl,
-  } = getConfig();
+  const { providerName, isBaidu, apiKey, isEnabledAccessControl } = getConfig();
   // when using baidu api in app, not set auth header
   if (isBaidu && clientConfig?.isApp) return headers;
 
-  const authHeader = getAuthHeader();
+  const authHeader = getAuthHeader(providerName);
 
-  const bearerToken = getBearerToken(
-    apiKey,
-    isAzure || isAnthropic || isGoogle,
-  );
+  const noBearerProvider =
+    providerName === ServiceProvider.Azure ||
+    providerName === ServiceProvider.Anthropic ||
+    providerName === ServiceProvider.Google;
+
+  const bearerToken = getBearerToken(apiKey, noBearerProvider);
 
   if (bearerToken) {
     headers[authHeader] = bearerToken;

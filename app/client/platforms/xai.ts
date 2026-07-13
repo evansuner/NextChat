@@ -8,7 +8,7 @@ import {
   ChatMessageTool,
   usePluginStore,
 } from "@/app/store";
-import { stream } from "@/app/utils/chat";
+import { streamWithThink } from "@/app/utils/chat";
 import {
   ChatOptions,
   getHeaders,
@@ -76,15 +76,26 @@ export class XAIApi implements LLMApi {
       },
     };
 
+    // reasoning models (e.g. grok-3-mini, grok-4, grok-4.5) do not support
+    // presence_penalty / frequency_penalty, and accept reasoning_effort instead
+    const isReasoningModel = /grok-(3-mini|4)/i.test(modelConfig.model);
+
     const requestPayload: RequestPayload = {
       messages,
       stream: options.config.stream,
       model: modelConfig.model,
       temperature: modelConfig.temperature,
-      presence_penalty: modelConfig.presence_penalty,
-      frequency_penalty: modelConfig.frequency_penalty,
       top_p: modelConfig.top_p,
     };
+
+    if (isReasoningModel) {
+      if (modelConfig.reasoning_effort && modelConfig.reasoning_effort !== "") {
+        requestPayload.reasoning_effort = modelConfig.reasoning_effort;
+      }
+    } else {
+      requestPayload.presence_penalty = modelConfig.presence_penalty;
+      requestPayload.frequency_penalty = modelConfig.frequency_penalty;
+    }
 
     console.log("[Request] xai payload: ", requestPayload);
 
@@ -113,7 +124,7 @@ export class XAIApi implements LLMApi {
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-        return stream(
+        return streamWithThink(
           chatPath,
           requestPayload,
           getHeaders(),
@@ -126,8 +137,9 @@ export class XAIApi implements LLMApi {
             const json = JSON.parse(text);
             const choices = json.choices as Array<{
               delta: {
-                content: string;
+                content: string | null;
                 tool_calls: ChatMessageTool[];
+                reasoning_content: string | null;
               };
             }>;
             const tool_calls = choices[0]?.delta?.tool_calls;
@@ -149,7 +161,37 @@ export class XAIApi implements LLMApi {
                 runTools[index]["function"]["arguments"] += args;
               }
             }
-            return choices[0]?.delta?.content;
+
+            const reasoning = choices[0]?.delta?.reasoning_content;
+            const content = choices[0]?.delta?.content;
+
+            // Skip if both content and reasoning_content are empty or null
+            if (
+              (!reasoning || reasoning.length === 0) &&
+              (!content || content.length === 0)
+            ) {
+              return {
+                isThinking: false,
+                content: "",
+              };
+            }
+
+            if (reasoning && reasoning.length > 0) {
+              return {
+                isThinking: true,
+                content: reasoning,
+              };
+            } else if (content && content.length > 0) {
+              return {
+                isThinking: false,
+                content: content,
+              };
+            }
+
+            return {
+              isThinking: false,
+              content: "",
+            };
           },
           // processToolMessage, include tool_calls message and tool call results
           (

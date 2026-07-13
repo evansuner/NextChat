@@ -49,8 +49,8 @@ export const FunctionToolService = {
       plugin?.authType == "basic"
         ? `Basic ${plugin?.authToken}`
         : plugin?.authType == "bearer"
-        ? `Bearer ${plugin?.authToken}`
-        : plugin?.authToken;
+          ? `Bearer ${plugin?.authToken}`
+          : plugin?.authToken;
     const authLocation = plugin?.authLocation || "header";
     const definition = yaml.load(plugin.content) as any;
     const serverURL = definition?.servers?.[0]?.url;

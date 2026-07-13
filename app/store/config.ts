@@ -71,6 +71,7 @@ export const DEFAULT_CONFIG = {
     max_tokens: 4000,
     presence_penalty: 0,
     frequency_penalty: 0,
+    reasoning_effort: "",
     sendMemory: true,
     historyMessageCount: 4,
     compressMessageLengthThreshold: 1000,
@@ -201,11 +202,9 @@ export const useAppConfig = createPersistStore(
       const state = persistedState as ChatConfig | undefined;
       if (!state) return { ...currentState };
       const models = currentState.models.slice();
-      state.models?.forEach((pModel) => {
+      state.models.forEach((pModel) => {
         const idx = models.findIndex(
-          (v) =>
-            v.name === pModel.name &&
-            v.provider?.id === pModel.provider?.id,
+          (v) => v.name === pModel.name && v.provider === pModel.provider,
         );
         if (idx !== -1) models[idx] = pModel;
         else models.push(pModel);
@@ -247,7 +246,7 @@ export const useAppConfig = createPersistStore(
         state.modelConfig.template =
           state.modelConfig.template !== DEFAULT_INPUT_TEMPLATE
             ? state.modelConfig.template
-            : config?.template ?? DEFAULT_INPUT_TEMPLATE;
+            : (config?.template ?? DEFAULT_INPUT_TEMPLATE);
       }
 
       if (version < 4.1) {

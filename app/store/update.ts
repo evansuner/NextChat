@@ -75,7 +75,7 @@ export const useUpdateStore = createPersistStore(
           ? getClientConfig()?.commitDate
           : getClientConfig()?.version;
 
-      set(() => ({ version: version ?? "unknown" }));
+      set(() => ({ version }));
 
       const shouldCheck = Date.now() - get().lastUpdate > 2 * 60 * ONE_MINUTE;
       if (!force && !shouldCheck) return;
