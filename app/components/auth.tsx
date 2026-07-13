@@ -1,4 +1,3 @@
-import styles from "./auth.module.scss";
 import { IconButton } from "./button";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -36,21 +35,23 @@ export function AuthPage() {
   }, []);
 
   return (
-    <div className={styles["auth-page"]}>
+    <div className="flex h-full w-full flex-col items-center justify-start">
       {/* <TopBanner></TopBanner> */}
-      <div className={styles["auth-header"]}>
+      <div className="box-border flex w-full justify-between p-2.5 animate-[slide-in-from-top_ease_0.3s]">
         <IconButton
           icon={<LeftIcon />}
           text={Locale.Auth.Return}
           onClick={() => navigate(Path.Home)}
         ></IconButton>
       </div>
-      <div className={clsx("no-dark", styles["auth-logo"])}>
+      <div className={clsx("no-dark", "mt-[10vh] scale-[1.4]")}>
         <BotIcon />
       </div>
 
-      <div className={styles["auth-title"]}>{Locale.Auth.Title}</div>
-      <div className={styles["auth-tips"]}>{Locale.Auth.Tips}</div>
+      <div className="mb-[1vh] text-2xl font-bold leading-loose">
+        {Locale.Auth.Title}
+      </div>
+      <div className="text-sm">{Locale.Auth.Tips}</div>
 
       <PasswordInput
         style={{ marginTop: "3vh", marginBottom: "3vh" }}
@@ -68,7 +69,7 @@ export function AuthPage() {
 
       {!accessStore.hideUserApiKey ? (
         <>
-          <div className={styles["auth-tips"]}>{Locale.Auth.SubTips}</div>
+          <div className="text-sm">{Locale.Auth.SubTips}</div>
           <PasswordInput
             style={{ marginTop: "3vh", marginBottom: "3vh" }}
             aria={Locale.Settings.ShowPassword}
@@ -150,15 +151,23 @@ function TopBanner() {
   }
   return (
     <div
-      className={styles["top-banner"]}
+      className="relative box-border flex w-full items-center justify-center bg-second px-16 py-3 max-[600px]:py-3 max-[600px]:pl-3 max-[600px]:pr-6"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className={clsx(styles["top-banner-inner"], "no-dark")}>
-        <Logo className={styles["top-banner-logo"]}></Logo>
+      <div
+        className={clsx(
+          "flex items-center justify-center text-sm leading-[150%] [&_span]:gap-2 [&_span_a]:ml-2 [&_span_a]:inline-flex [&_span_a]:items-center [&_span_a]:text-primary [&_span_a]:no-underline",
+          "no-dark",
+        )}
+      >
+        <Logo className="max-[600px]:mr-2"></Logo>
       </div>
       {(isHovered || isMobile) && (
-        <Delete className={styles["top-banner-close"]} onClick={handleClose} />
+        <Delete
+          className="absolute right-12 top-1/2 -translate-y-1/2 cursor-pointer max-[600px]:right-2.5"
+          onClick={handleClose}
+        />
       )}
     </div>
   );

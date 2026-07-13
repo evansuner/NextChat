@@ -1,5 +1,4 @@
 import * as React from "react";
-import styles from "./input-range.module.scss";
 import clsx from "clsx";
 
 interface InputRangeProps {
@@ -24,7 +23,12 @@ export function InputRange({
   aria,
 }: InputRangeProps) {
   return (
-    <div className={clsx(styles["input-range"], className)}>
+    <div
+      className={clsx(
+        "flex max-w-[40%] justify-between rounded-[10px] px-2.5 py-1.25 text-xs [border:var(--border-in-light)] [&_input[type=range]]:max-w-[calc(100%-34px)]",
+        className,
+      )}
+    >
       {title || value}
       <input
         aria-label={aria}

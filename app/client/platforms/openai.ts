@@ -24,6 +24,8 @@ import {
   streamWithThink,
 } from "@/app/utils/chat";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
+import { streamWithAISDK } from "../ai-sdk/stream";
+import { createChatModel } from "../ai-sdk/providers";
 import { ModelSize, DalleQuality, DalleStyle } from "@/app/typing";
 
 import {
@@ -309,6 +311,39 @@ export class ChatGPTApi implements LLMApi {
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
+
+        // Route streaming through the Vercel AI SDK using the dedicated OpenAI
+        // client, pointed at the same base URL and auth headers NextChat
+        // already resolves. Azure keeps the legacy streaming path because it
+        // uses a different URL scheme (api-version query + api-key header).
+        const isAzure = modelConfig.providerName === ServiceProvider.Azure;
+        if (!isAzure) {
+          const payload = requestPayload as RequestPayload;
+          const baseURL = chatPath.replace(/\/chat\/completions.*$/, "");
+          const aiModel = createChatModel({
+            kind: "openai",
+            model: modelConfig.model,
+            baseURL,
+            headers: getHeaders(),
+          });
+
+          return streamWithAISDK({
+            model: aiModel,
+            messages: payload.messages as any,
+            temperature: payload.temperature,
+            topP: payload.top_p,
+            presencePenalty: payload.presence_penalty,
+            frequencyPenalty: payload.frequency_penalty,
+            maxTokens:
+              (payload as any).max_completion_tokens ?? payload.max_tokens,
+            tools: tools as any[],
+            funcs,
+            controller,
+            options,
+            timeoutMs: getTimeoutMSByModel(options.config.model),
+          });
+        }
+
         // console.log("getAsTools", tools, funcs);
         streamWithThink(
           chatPath,

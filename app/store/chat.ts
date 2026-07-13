@@ -404,6 +404,53 @@ export const useChatStore = createPersistStore(
         get().summarizeSession(false, targetSession);
       },
 
+      // Create and persist the user message + an empty streaming assistant
+      // placeholder for a new turn, applying the mask template exactly like
+      // `onUserInput`. Returns the placeholder ids so the AI SDK `useChat`
+      // layer can stream the response into the assistant message. This keeps
+      // all template/persistence logic in the store while the UI streams via
+      // the AI SDK transport.
+      prepareUserTurn(
+        content: string,
+        attachImages?: string[],
+        isMcpResponse?: boolean,
+      ): { userMessageId: string; botMessageId: string } {
+        const session = get().currentSession();
+        const modelConfig = session.mask.modelConfig;
+
+        let mContent: string | MultimodalContent[] = isMcpResponse
+          ? content
+          : fillTemplateWith(content, modelConfig);
+
+        if (!isMcpResponse && attachImages && attachImages.length > 0) {
+          mContent = [
+            ...(content ? [{ type: "text" as const, text: content }] : []),
+            ...attachImages.map((url) => ({
+              type: "image_url" as const,
+              image_url: { url },
+            })),
+          ];
+        }
+
+        const userMessage: ChatMessage = createMessage({
+          role: "user",
+          content: mContent,
+          isMcpResponse,
+        });
+
+        const botMessage: ChatMessage = createMessage({
+          role: "assistant",
+          streaming: true,
+          model: modelConfig.model,
+        });
+
+        get().updateTargetSession(session, (session) => {
+          session.messages = session.messages.concat([userMessage, botMessage]);
+        });
+
+        return { userMessageId: userMessage.id, botMessageId: botMessage.id };
+      },
+
       async onUserInput(
         content: string,
         attachImages?: string[],
@@ -637,6 +684,107 @@ export const useChatStore = createPersistStore(
         ];
 
         return recentMessages;
+      },
+
+      // Assemble the exact request for the AI SDK `useChat` transport. Mirrors
+      // `getMessagesWithMemory`, but is called AFTER `prepareUserTurn` has
+      // already appended the new user message + an empty streaming assistant
+      // placeholder to `session.messages`. It therefore (1) drops the trailing
+      // placeholder and (2) sizes the short-term window as
+      // `historyMessageCount + 1` so the current user message is always sent
+      // and exactly `historyMessageCount` prior messages are included — the
+      // same contract the original `onUserInput` had via `.concat(userMessage)`.
+      async getMessagesForSend(): Promise<ChatMessage[]> {
+        const session = get().currentSession();
+        const modelConfig = session.mask.modelConfig;
+        const clearContextIndex = session.clearContextIndex ?? 0;
+
+        // Drop trailing empty streaming assistant placeholder(s).
+        let messages = session.messages.slice();
+        while (
+          messages.length > 0 &&
+          (() => {
+            const last = messages[messages.length - 1];
+            return (
+              last.role === "assistant" &&
+              last.streaming &&
+              getMessageTextContent(last).length === 0
+            );
+          })()
+        ) {
+          messages = messages.slice(0, -1);
+        }
+        const totalMessageCount = messages.length;
+
+        const contextPrompts = session.mask.context.slice();
+
+        const shouldInjectSystemPrompts =
+          modelConfig.enableInjectSystemPrompts &&
+          (modelConfig.model.startsWith("gpt-") ||
+            modelConfig.model.startsWith("chatgpt-"));
+
+        const mcpEnabled = await isMcpEnabled();
+        const mcpSystemPrompt = mcpEnabled ? await getMcpSystemPrompt() : "";
+
+        var systemPrompts: ChatMessage[] = [];
+        if (shouldInjectSystemPrompts) {
+          systemPrompts = [
+            createMessage({
+              role: "system",
+              content:
+                fillTemplateWith("", {
+                  ...modelConfig,
+                  template: DEFAULT_SYSTEM_TEMPLATE,
+                }) + mcpSystemPrompt,
+            }),
+          ];
+        } else if (mcpEnabled) {
+          systemPrompts = [
+            createMessage({ role: "system", content: mcpSystemPrompt }),
+          ];
+        }
+
+        const memoryPrompt = get().getMemoryPrompt();
+        const shouldSendLongTermMemory =
+          modelConfig.sendMemory &&
+          session.memoryPrompt &&
+          session.memoryPrompt.length > 0 &&
+          session.lastSummarizeIndex > clearContextIndex;
+        const longTermMemoryPrompts =
+          shouldSendLongTermMemory && memoryPrompt ? [memoryPrompt] : [];
+        const longTermMemoryStartIndex = session.lastSummarizeIndex;
+
+        // +1 accounts for the current user message occupying one window slot,
+        // matching the original `getMessagesWithMemory() + userMessage` contract.
+        const shortTermMemoryStartIndex = Math.max(
+          0,
+          totalMessageCount - (modelConfig.historyMessageCount + 1),
+        );
+
+        const memoryStartIndex = shouldSendLongTermMemory
+          ? Math.min(longTermMemoryStartIndex, shortTermMemoryStartIndex)
+          : shortTermMemoryStartIndex;
+        const contextStartIndex = Math.max(clearContextIndex, memoryStartIndex);
+        const maxTokenThreshold = modelConfig.max_tokens;
+
+        const reversedRecentMessages = [];
+        for (
+          let i = totalMessageCount - 1, tokenCount = 0;
+          i >= contextStartIndex && tokenCount < maxTokenThreshold;
+          i -= 1
+        ) {
+          const msg = messages[i];
+          if (!msg || msg.isError) continue;
+          tokenCount += estimateTokenLength(getMessageTextContent(msg));
+          reversedRecentMessages.push(msg);
+        }
+
+        return [
+          ...systemPrompts,
+          ...longTermMemoryPrompts,
+          ...contextPrompts,
+          ...reversedRecentMessages.reverse(),
+        ];
       },
 
       updateMessage(

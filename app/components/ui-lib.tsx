@@ -1,5 +1,4 @@
 /* eslint-disable @next/next/no-img-element */
-import styles from "./ui-lib.module.scss";
 import LoadingIcon from "../icons/three-dots.svg";
 import CloseIcon from "../icons/close.svg";
 import EyeIcon from "../icons/eye.svg";
@@ -33,13 +32,18 @@ export function Popover(props: {
   onClose?: () => void;
 }) {
   return (
-    <div className={styles.popover}>
+    <div className="relative z-[2]">
       {props.children}
       {props.open && (
-        <div className={styles["popover-mask"]} onClick={props.onClose}></div>
+        <div
+          className="fixed left-0 top-0 h-screen w-screen bg-[rgba(0,0,0,0.3)] [backdrop-filter:blur(5px)]"
+          onClick={props.onClose}
+        ></div>
       )}
       {props.open && (
-        <div className={styles["popover-content"]}>{props.content}</div>
+        <div className="absolute right-0 top-[calc(100%+10px)] w-[350px] [animation:slide-in_0.3s_ease] max-[600px]:w-auto">
+          {props.content}
+        </div>
       )}
     </div>
   );
@@ -47,7 +51,14 @@ export function Popover(props: {
 
 export function Card(props: { children: JSX.Element[]; className?: string }) {
   return (
-    <div className={clsx(styles.card, props.className)}>{props.children}</div>
+    <div
+      className={clsx(
+        "rounded-[10px] bg-white p-2.5 shadow-card",
+        props.className,
+      )}
+    >
+      {props.children}
+    </div>
   );
 }
 
@@ -63,20 +74,26 @@ export function ListItem(props: {
   return (
     <div
       className={clsx(
-        styles["list-item"],
-        {
-          [styles["vertical"]]: props.vertical,
-        },
+        "flex min-h-10 justify-between px-5 py-2.5 [animation:slide-in_ease_0.6s] [border-bottom:var(--border-in-light)]",
+        props.vertical ? "flex-col items-start" : "items-center",
         props.className,
       )}
       onClick={props.onClick}
     >
-      <div className={styles["list-header"]}>
-        {props.icon && <div className={styles["list-icon"]}>{props.icon}</div>}
-        <div className={styles["list-item-title"]}>
+      <div className="flex items-center">
+        {props.icon && <div className="mr-2.5">{props.icon}</div>}
+        <div
+          className={clsx("text-sm [font-weight:bolder]", {
+            "mb-[5px]": props.vertical,
+          })}
+        >
           <div>{props.title}</div>
           {props.subTitle && (
-            <div className={styles["list-item-sub-title"]}>
+            <div
+              className={clsx("text-xs font-normal", {
+                "mb-0.5": props.vertical,
+              })}
+            >
               {props.subTitle}
             </div>
           )}
@@ -89,7 +106,10 @@ export function ListItem(props: {
 
 export function List(props: { children: React.ReactNode; id?: string }) {
   return (
-    <div className={styles.list} id={props.id}>
+    <div
+      className="mb-5 rounded-[10px] bg-white shadow-card [animation:slide-in_ease_0.3s] [border:var(--border-in-light)] [&>*:last-child]:border-0"
+      id={props.id}
+    >
       {props.children}
     </div>
   );
@@ -139,22 +159,25 @@ export function Modal(props: ModalProps) {
 
   return (
     <div
-      className={clsx(styles["modal-container"], {
-        [styles["modal-container-max"]]: isMax,
-      })}
+      className={clsx(
+        "min-w-[300px] rounded-xl bg-white shadow-card [animation:slide-in_ease_0.3s] max-[600px]:w-screen max-[600px]:rounded-b-none",
+        isMax
+          ? "flex h-[95vh] w-[95vw] max-w-none flex-col"
+          : "w-[80vw] max-w-[900px]",
+      )}
     >
-      <div className={styles["modal-header"]}>
-        <div className={styles["modal-title"]}>{props.title}</div>
+      <div className="flex items-center justify-between p-5 [border-bottom:var(--border-in-light)]">
+        <div className="text-base [font-weight:bolder]">{props.title}</div>
 
-        <div className={styles["modal-header-actions"]}>
+        <div className="flex">
           <div
-            className={styles["modal-header-action"]}
+            className="cursor-pointer hover:[filter:brightness(1.2)] [&:not(:last-child)]:mr-5"
             onClick={() => setMax(!isMax)}
           >
             {isMax ? <MinIcon /> : <MaxIcon />}
           </div>
           <div
-            className={styles["modal-header-action"]}
+            className="cursor-pointer hover:[filter:brightness(1.2)] [&:not(:last-child)]:mr-5"
             onClick={props.onClose}
           >
             <CloseIcon />
@@ -162,13 +185,20 @@ export function Modal(props: ModalProps) {
         </div>
       </div>
 
-      <div className={styles["modal-content"]}>{props.children}</div>
+      <div
+        className={clsx(
+          "max-h-[40vh] overflow-auto p-5 max-[600px]:max-h-[50vh]",
+          { "max-h-none! grow": isMax },
+        )}
+      >
+        {props.children}
+      </div>
 
-      <div className={styles["modal-footer"]}>
+      <div className="flex justify-end p-5 shadow-panel [border-top:var(--border-in-light)]">
         {props.footer}
-        <div className={styles["modal-actions"]}>
+        <div className="flex items-center">
           {props.actions?.map((action, i) => (
-            <div key={i} className={styles["modal-action"]}>
+            <div key={i} className="[&:not(:last-child)]:mr-5">
               {action}
             </div>
           ))}
@@ -210,8 +240,8 @@ export type ToastProps = {
 
 export function Toast(props: ToastProps) {
   return (
-    <div className={styles["toast-container"]}>
-      <div className={styles["toast-content"]}>
+    <div className="pointer-events-none fixed bottom-[5vh] left-0 flex w-screen justify-center">
+      <div className="[pointer-events:all] mb-5 flex max-w-[80vw] items-center break-all rounded-[50px] bg-white px-5 py-2.5 text-sm text-black shadow-card [border:var(--border-in-light)]">
         <span>{props.content}</span>
         {props.action && (
           <button
@@ -219,7 +249,7 @@ export function Toast(props: ToastProps) {
               props.action?.onClick?.();
               props.onClose?.();
             }}
-            className={styles["toast-action"]}
+            className="cursor-pointer border-0 pl-5 text-primary opacity-80 [background:none] [font-family:inherit] hover:opacity-100"
           >
             {props.action.text}
           </button>
@@ -235,12 +265,13 @@ export function showToast(
   delay = 3000,
 ) {
   const div = document.createElement("div");
-  div.className = styles.show;
+  div.className =
+    "fixed bottom-0 left-0 z-[99999] translate-y-0 opacity-100 [animation:slide-in_ease_0.6s] [transition:all_ease_0.3s]";
   document.body.appendChild(div);
 
   const root = createRoot(div);
   const close = () => {
-    div.classList.add(styles.hide);
+    div.classList.add("translate-y-5!", "opacity-0!");
 
     setTimeout(() => {
       root.unmount();
@@ -264,7 +295,10 @@ export function Input(props: InputProps) {
   return (
     <textarea
       {...props}
-      className={clsx(styles["input"], props.className)}
+      className={clsx(
+        "min-w-[50px] resize-none rounded-[10px] bg-white p-2.5 text-black [border:var(--border-in-light)] [font-family:inherit]",
+        props.className,
+      )}
     ></textarea>
   );
 }
@@ -306,17 +340,20 @@ export function Select(
   return (
     <div
       className={clsx(
-        styles["select-with-icon"],
+        "relative max-w-fit",
         {
-          [styles["left-align-option"]]: align === "left",
+          "[&_option]:text-left": align === "left",
         },
         className,
       )}
     >
-      <select className={styles["select-with-icon-select"]} {...otherProps}>
+      <select
+        className="h-full cursor-pointer appearance-none rounded-[10px] bg-white py-2.5 pl-2.5 pr-[35px] text-center text-black [border:var(--border-in-light)]"
+        {...otherProps}
+      >
         {children}
       </select>
-      <DownIcon className={styles["select-with-icon-icon"]} />
+      <DownIcon className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" />
     </div>
   );
 }
@@ -385,7 +422,7 @@ function PromptInput(props: {
 
   return (
     <textarea
-      className={styles["modal-input"]}
+      className="box-border h-full w-full resize-none rounded-[10px] bg-white p-2.5 text-black outline-none [border:var(--border-in-light)] [box-shadow:0_-2px_5px_rgba(0,0,0,0.03)] [font-family:inherit] focus:[border:1px_solid_var(--primary)]"
       autoFocus
       value={input}
       onInput={(e) => onInput(e.currentTarget.value)}
@@ -510,16 +547,22 @@ export function Selector<T>(props: {
   };
 
   return (
-    <div className={styles["selector"]} onClick={() => props.onClose?.()}>
-      <div className={styles["selector-content"]}>
+    <div
+      className="fixed left-0 top-0 z-[999] flex h-screen w-screen items-center justify-center bg-[rgba(0,0,0,0.5)]"
+      onClick={() => props.onClose?.()}
+    >
+      <div className="min-w-[300px] [&>div]:max-h-[90vh] [&>div]:overflow-x-hidden [&>div]:overflow-y-auto">
         <List>
           {props.items.map((item, i) => {
             const selected = selectedValues.includes(item.value);
             return (
               <ListItem
-                className={clsx(styles["selector-item"], {
-                  [styles["selector-item-disabled"]]: item.disable,
-                })}
+                className={clsx(
+                  "cursor-pointer bg-white hover:[filter:brightness(0.95)] active:[filter:brightness(0.9)]",
+                  {
+                    "opacity-60": item.disable,
+                  },
+                )}
                 key={i}
                 title={item.title}
                 subTitle={item.subTitle}

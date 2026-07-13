@@ -1,6 +1,5 @@
 import * as React from "react";
 
-import styles from "./button.module.scss";
 import { CSSProperties } from "react";
 import clsx from "clsx";
 
@@ -25,12 +24,15 @@ export function IconButton(props: {
     <button
       className={clsx(
         "clickable",
-        styles["icon-button"],
+        "flex cursor-pointer items-center justify-center overflow-hidden rounded-[10px] border-none bg-white p-2.5 text-black outline-none [transition:all_0.3s_ease] select-none hover:border-primary focus:border-primary disabled:cursor-not-allowed disabled:opacity-50 max-[600px]:p-4",
         {
-          [styles.border]: props.bordered,
-          [styles.shadow]: props.shadow,
+          "[border:var(--border-in-light)]": props.bordered,
+          "shadow-card": props.shadow,
+          "bg-primary text-[white] [&_path]:fill-[white]!":
+            props.type === "primary",
+          "border-[rgba(255,0,0,0.5)] bg-[rgba(255,0,0,0.05)] text-[rgba(255,0,0,0.8)] hover:border-[red] hover:bg-[rgba(255,0,0,0.1)] [&_path]:fill-[red]!":
+            props.type === "danger",
         },
-        styles[props.type ?? ""],
         props.className,
       )}
       onClick={props.onClick}
@@ -45,7 +47,7 @@ export function IconButton(props: {
       {props.icon && (
         <div
           aria-label={props.text || props.title}
-          className={clsx(styles["icon-button-icon"], {
+          className={clsx("flex h-4 w-4 items-center justify-center", {
             "no-dark": props.type === "primary",
           })}
         >
@@ -56,7 +58,7 @@ export function IconButton(props: {
       {props.text && (
         <div
           aria-label={props.text || props.title}
-          className={styles["icon-button-text"]}
+          className="overflow-hidden text-xs text-ellipsis whitespace-nowrap not-first:ml-1.25"
         >
           {props.text}
         </div>

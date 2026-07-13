@@ -12,9 +12,9 @@ import {
   useAppConfig,
   useChatStore,
   usePluginStore,
-  ChatMessageTool,
 } from "@/app/store";
-import { stream } from "@/app/utils/chat";
+import { streamWithAISDK } from "../ai-sdk/stream";
+import { createChatModel } from "../ai-sdk/providers";
 import { getClientConfig } from "@/app/config/client";
 import { GEMINI_BASE_URL } from "@/app/constant";
 
@@ -25,8 +25,6 @@ import {
   getTimeoutMSByModel,
 } from "@/app/utils";
 import { preProcessImageContent } from "@/app/utils/chat";
-import { nanoid } from "nanoid";
-import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
 
 export class GeminiProApi implements LLMApi {
@@ -211,82 +209,41 @@ export class GeminiProApi implements LLMApi {
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-        return stream(
-          chatPath,
-          requestPayload,
-          getHeaders(),
-          // @ts-ignore
-          tools.length > 0
-            ? // @ts-ignore
-              [{ functionDeclarations: tools.map((tool) => tool.function) }]
-            : [],
+
+        // Route streaming through the Vercel AI SDK using the dedicated Google
+        // client, pointed at the same base URL and auth headers NextChat
+        // already resolves. The SDK builds the native Gemini request from the
+        // OpenAI-style messages, so the bespoke `contents` transform is only
+        // used by the non-streaming branch below.
+        clearTimeout(requestTimeoutId);
+        const baseURL = this.path(
+          Google.ChatPath(modelConfig.model),
+          false,
+        ).replace(/\/models\/[^/]+:streamGenerateContent.*$/, "");
+        const model = createChatModel({
+          kind: "google",
+          model: modelConfig.model,
+          baseURL,
+          headers: getHeaders(),
+        });
+
+        return streamWithAISDK({
+          model,
+          messages: _messages,
+          temperature: modelConfig.temperature,
+          topP: modelConfig.top_p,
+          maxTokens: modelConfig.max_tokens,
+          tools: tools as any[],
           funcs,
           controller,
-          // parseSSE
-          (text: string, runTools: ChatMessageTool[]) => {
-            // console.log("parseSSE", text, runTools);
-            const chunkJson = JSON.parse(text);
-
-            const functionCall = chunkJson?.candidates
-              ?.at(0)
-              ?.content.parts.at(0)?.functionCall;
-            if (functionCall) {
-              const { name, args } = functionCall;
-              runTools.push({
-                id: nanoid(),
-                type: "function",
-                function: {
-                  name,
-                  arguments: JSON.stringify(args), // utils.chat call function, using JSON.parse
-                },
-              });
-            }
-            return chunkJson?.candidates
-              ?.at(0)
-              ?.content.parts?.map((part: { text: string }) => part.text)
-              .join("\n\n");
-          },
-          // processToolMessage, include tool_calls message and tool call results
-          (
-            requestPayload: RequestPayload,
-            toolCallMessage: any,
-            toolCallResult: any[],
-          ) => {
-            // @ts-ignore
-            requestPayload?.contents?.splice(
-              // @ts-ignore
-              requestPayload?.contents?.length,
-              0,
-              {
-                role: "model",
-                parts: toolCallMessage.tool_calls.map(
-                  (tool: ChatMessageTool) => ({
-                    functionCall: {
-                      name: tool?.function?.name,
-                      args: JSON.parse(tool?.function?.arguments as string),
-                    },
-                  }),
-                ),
-              },
-              // @ts-ignore
-              ...toolCallResult.map((result) => ({
-                role: "function",
-                parts: [
-                  {
-                    functionResponse: {
-                      name: result.name,
-                      response: {
-                        name: result.name,
-                        content: result.content, // TODO just text content...
-                      },
-                    },
-                  },
-                ],
-              })),
-            );
-          },
           options,
-        );
+          timeoutMs: getTimeoutMSByModel(options.config.model),
+          providerOptions: {
+            google: {
+              safetySettings: requestPayload.safetySettings,
+            },
+          },
+        });
       } else {
         const res = await fetch(chatPath, chatPayload);
         clearTimeout(requestTimeoutId);

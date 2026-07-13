@@ -1,7 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
 
-import styles from "./settings.module.scss";
-
 import ResetIcon from "../icons/reload.svg";
 import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
@@ -108,12 +106,12 @@ function EditPromptModal(props: { id: string; onClose: () => void }) {
           />,
         ]}
       >
-        <div className={styles["edit-prompt-modal"]}>
+        <div className="flex flex-col">
           <input
             type="text"
             value={prompt.title}
             readOnly={!prompt.isUser}
-            className={styles["edit-prompt-title"]}
+            className="max-w-none mb-5 text-left"
             onInput={(e) =>
               promptStore.updatePrompt(
                 props.id,
@@ -124,7 +122,7 @@ function EditPromptModal(props: { id: string; onClose: () => void }) {
           <Input
             value={prompt.content}
             readOnly={!prompt.isUser}
-            className={styles["edit-prompt-content"]}
+            className="max-w-none"
             rows={10}
             onInput={(e) =>
               promptStore.updatePrompt(
@@ -182,49 +180,52 @@ function UserPromptModal(props: { onClose?: () => void }) {
           />,
         ]}
       >
-        <div className={styles["user-prompt-modal"]}>
+        <div className="min-h-[40vh]">
           <input
             type="text"
-            className={styles["user-prompt-search"]}
+            className="w-full max-w-full mb-2.5 bg-gray"
             placeholder={Locale.Settings.Prompt.Modal.Search}
             value={searchInput}
             onInput={(e) => setSearchInput(e.currentTarget.value)}
           ></input>
 
-          <div className={styles["user-prompt-list"]}>
+          <div className="[border:var(--border-in-light)] rounded-[10px]">
             {prompts.map((v, _) => (
-              <div className={styles["user-prompt-item"]} key={v.id ?? v.title}>
-                <div className={styles["user-prompt-header"]}>
-                  <div className={styles["user-prompt-title"]}>{v.title}</div>
-                  <div className={styles["user-prompt-content"] + " one-line"}>
+              <div
+                className="flex justify-between p-2.5 [&:not(:last-child)]:[border-bottom:var(--border-in-light)]"
+                key={v.id ?? v.title}
+              >
+                <div className="max-w-[calc(100%-100px)]">
+                  <div className="text-sm leading-[2] font-bold">{v.title}</div>
+                  <div className="text-xs one-line">
                     {v.content}
                   </div>
                 </div>
 
-                <div className={styles["user-prompt-buttons"]}>
+                <div className="flex items-center gap-x-0.5">
                   {v.isUser && (
                     <IconButton
                       icon={<ClearIcon />}
-                      className={styles["user-prompt-button"]}
+                      className="p-[7px]"
                       onClick={() => promptStore.remove(v.id!)}
                     />
                   )}
                   {v.isUser ? (
                     <IconButton
                       icon={<EditIcon />}
-                      className={styles["user-prompt-button"]}
+                      className="p-[7px]"
                       onClick={() => setEditingPromptId(v.id)}
                     />
                   ) : (
                     <IconButton
                       icon={<EyeIcon />}
-                      className={styles["user-prompt-button"]}
+                      className="p-[7px]"
                       onClick={() => setEditingPromptId(v.id)}
                     />
                   )}
                   <IconButton
                     icon={<CopyIcon />}
-                    className={styles["user-prompt-button"]}
+                    className="p-[7px]"
                     onClick={() => copyToClipboard(v.content)}
                   />
                 </div>
@@ -1539,7 +1540,7 @@ export function Settings() {
           </div>
         </div>
       </div>
-      <div className={styles["settings"]}>
+      <div className="p-5 overflow-auto">
         <List>
           <ListItem title={Locale.Settings.Avatar}>
             <Popover
@@ -1557,7 +1558,7 @@ export function Settings() {
               <div
                 aria-label={Locale.Settings.Avatar}
                 tabIndex={0}
-                className={styles.avatar}
+                className="cursor-pointer relative z-[1]"
                 onClick={() => {
                   setShowEmojiPicker(!showEmojiPicker);
                 }}

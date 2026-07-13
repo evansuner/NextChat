@@ -1,7 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
 import { ChatMessage, useAppConfig, useChatStore } from "../store";
 import Locale from "../locales";
-import styles from "./exporter.module.scss";
 import {
   List,
   ListItem,
@@ -104,31 +103,34 @@ function Steps<
   const stepCount = steps.length;
 
   return (
-    <div className={styles["steps"]}>
-      <div className={styles["steps-progress"]}>
+    <div className="relative overflow-hidden rounded-[10px] bg-gray p-1.25 [box-shadow:var(--card-shadow)_inset]">
+      <div className="absolute top-1.25 left-1.25 h-[calc(100%-10px)] w-[calc(100%-10px)]">
         <div
-          className={styles["steps-progress-inner"]}
+          className="inline-block box-border h-full w-0 rounded-lg bg-white shadow-card [border:var(--border-in-light)] [transition:all_ease_0.3s]"
           style={{
             width: `${((props.index + 1) / stepCount) * 100}%`,
           }}
         ></div>
       </div>
-      <div className={styles["steps-inner"]}>
+      <div className="flex scale-100">
         {steps.map((step, i) => {
           return (
             <div
               key={i}
-              className={clsx("clickable", styles["step"], {
-                [styles["step-finished"]]: i <= props.index,
-                [styles["step-current"]]: i === props.index,
-              })}
+              className={clsx(
+                "clickable flex grow items-center justify-center px-2.5 py-1.25 text-sm [transition:all_ease_0.3s] hover:opacity-80",
+                i <= props.index ? "opacity-90" : "opacity-50",
+                i === props.index ? "text-primary" : "text-black",
+              )}
               onClick={() => {
                 props.onStepChange?.(i);
               }}
               role="button"
             >
-              <span className={styles["step-index"]}>{i + 1}</span>
-              <span className={styles["step-name"]}>{step.name}</span>
+              <span className="mr-2 inline-block rounded-md bg-gray px-1.25 py-0 text-xs opacity-80 [border:var(--border-in-light)]">
+                {i + 1}
+              </span>
+              <span className="text-xs">{step.name}</span>
             </div>
           );
         })}
@@ -203,7 +205,7 @@ export function MessageExporter() {
         onStepChange={setCurrentStepIndex}
       />
       <div
-        className={styles["message-exporter-body"]}
+        className="mt-5"
         style={currentStep.value !== "select" ? { display: "none" } : {}}
       >
         <List>
@@ -249,7 +251,7 @@ export function MessageExporter() {
         />
       </div>
       {currentStep.value === "preview" && (
-        <div className={styles["message-exporter-body"]}>{preview()}</div>
+        <div className="mt-5">{preview()}</div>
       )}
     </>
   );
@@ -363,7 +365,7 @@ export function PreviewActions(props: {
 
   return (
     <>
-      <div className={styles["preview-actions"]}>
+      <div className="mb-5 flex justify-between [&_button]:grow [&_button:not(:last-child)]:mr-2.5">
         {props.showCopy && (
           <IconButton
             text={Locale.Export.Copy}
@@ -502,7 +504,7 @@ export function ImagePreviewer(props: {
   };
 
   return (
-    <div className={styles["image-previewer"]}>
+    <div>
       <PreviewActions
         copy={copy}
         download={download}
@@ -510,11 +512,11 @@ export function ImagePreviewer(props: {
         messages={props.messages}
       />
       <div
-        className={clsx(styles["preview-body"], styles["default-theme"])}
+        className="rounded-[10px] bg-gray p-5 [box-shadow:var(--card-shadow)_inset]"
         ref={previewRef}
       >
-        <div className={styles["chat-info"]}>
-          <div className={clsx(styles["logo"], "no-dark")}>
+        <div className="relative mb-5 flex items-end justify-between overflow-hidden rounded-[10px] bg-second p-5 max-[600px]:flex-col max-[600px]:items-start">
+          <div className={clsx("absolute top-0 left-0 h-1/2 scale-150", "no-dark")}>
             <NextImage
               src={ChatGptIcon.src}
               alt="logo"
@@ -524,13 +526,15 @@ export function ImagePreviewer(props: {
           </div>
 
           <div>
-            <div className={styles["main-title"]}>NextChat</div>
-            <div className={styles["sub-title"]}>
+            <div className="text-xl [font-weight:bolder]">NextChat</div>
+            <div className="text-xs">
               github.com/ChatGPTNextWeb/ChatGPT-Next-Web
             </div>
-            <div className={styles["icons"]}>
+            <div className="mt-2.5 flex items-center max-[600px]:mb-5">
               <MaskAvatar avatar={config.avatar} />
-              <span className={styles["icon-space"]}>&</span>
+              <span className="mx-2.5 my-0 text-xs text-primary [font-weight:bolder]">
+                &
+              </span>
               <MaskAvatar
                 avatar={mask.avatar}
                 model={session.mask.modelConfig.model}
@@ -538,16 +542,16 @@ export function ImagePreviewer(props: {
             </div>
           </div>
           <div>
-            <div className={styles["chat-info-item"]}>
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
               {Locale.Exporter.Model}: {mask.modelConfig.model}
             </div>
-            <div className={styles["chat-info-item"]}>
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
               {Locale.Exporter.Messages}: {props.messages.length}
             </div>
-            <div className={styles["chat-info-item"]}>
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
               {Locale.Exporter.Topic}: {session.topic}
             </div>
-            <div className={styles["chat-info-item"]}>
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
               {Locale.Exporter.Time}:{" "}
               {new Date(
                 props.messages.at(-1)?.date ?? Date.now(),
@@ -558,10 +562,13 @@ export function ImagePreviewer(props: {
         {props.messages.map((m, i) => {
           return (
             <div
-              className={clsx(styles["message"], styles["message-" + m.role])}
+              className={clsx(
+                "mb-5 flex",
+                m.role === "user" && "flex-row-reverse",
+              )}
               key={i}
             >
-              <div className={styles["avatar"]}>
+              <div className={m.role === "user" ? "mr-0" : "mr-2.5"}>
                 {m.role === "user" ? (
                   <Avatar avatar={config.avatar}></Avatar>
                 ) : (
@@ -572,7 +579,16 @@ export function ImagePreviewer(props: {
                 )}
               </div>
 
-              <div className={styles["body"]}>
+              <div
+                className={clsx(
+                  "max-w-[calc(100%-104px)] rounded-[10px] px-2.5 py-2 shadow-card [border:var(--border-in-light)] [&_code]:overflow-hidden [&_pre]:overflow-hidden",
+                  m.role === "user"
+                    ? "mr-2.5 bg-second"
+                    : m.role === "assistant"
+                      ? "bg-white"
+                      : "",
+                )}
+              >
                 <Markdown
                   content={getMessageTextContent(m)}
                   fontSize={config.fontSize}
@@ -584,12 +600,12 @@ export function ImagePreviewer(props: {
                     key={i}
                     src={getMessageImages(m)[0]}
                     alt="message"
-                    className={styles["message-image"]}
+                    className="mt-2.5 box-border w-full max-w-[calc(100vw/3*2)] rounded-[10px] [border:1px_solid_rgba(136,136,136,0.2)]"
                   />
                 )}
                 {getMessageImages(m).length > 1 && (
                   <div
-                    className={styles["message-images"]}
+                    className="mt-2.5 grid gap-2.5 [grid-template-columns:repeat(var(--image-count),auto)] [justify-content:left]"
                     style={
                       {
                         "--image-count": getMessageImages(m).length,
@@ -601,7 +617,7 @@ export function ImagePreviewer(props: {
                         key={i}
                         src={src}
                         alt="message"
-                        className={styles["message-image-multi"]}
+                        className="box-border rounded-[10px] object-cover [border:1px_solid_rgba(136,136,136,0.2)] max-[600px]:h-[calc(calc(100vw/2)/var(--image-count))] max-[600px]:w-[calc(calc(100vw/2)/var(--image-count))] min-[600px]:h-[calc(80vw/3*2/var(--image-count))] min-[600px]:max-h-[calc(900px/3*2/var(--image-count))] min-[600px]:w-[calc(80vw/3*2/var(--image-count))] min-[600px]:max-w-[calc(900px/3*2/var(--image-count))]"
                       />
                     ))}
                   </div>
@@ -646,7 +662,7 @@ export function MarkdownPreviewer(props: {
         messages={props.messages}
       />
       <div className="markdown-body">
-        <pre className={styles["export-content"]}>{mdText}</pre>
+        <pre className="whitespace-break-spaces p-2.5!">{mdText}</pre>
       </div>
     </>
   );

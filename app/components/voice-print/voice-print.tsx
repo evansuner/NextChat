@@ -1,5 +1,4 @@
 import { useEffect, useRef, useCallback } from "react";
-import styles from "./voice-print.module.scss";
 
 interface VoicePrintProps {
   frequencies?: Uint8Array;
@@ -173,7 +172,7 @@ export function VoicePrint({ frequencies, isActive }: VoicePrintProps) {
   }, [frequencies, isActive, updateHistory]);
 
   return (
-    <div className={styles["voice-print"]}>
+    <div className="my-5 h-15 w-full [&_canvas]:h-full [&_canvas]:w-full [&_canvas]:brightness-125">
       <canvas ref={canvasRef} />
     </div>
   );

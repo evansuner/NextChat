@@ -1,8 +1,6 @@
 import { IconButton } from "./button";
 import { ErrorBoundary } from "./error";
 
-import styles from "./mask.module.scss";
-
 import DownloadIcon from "../icons/download.svg";
 import UploadIcon from "../icons/upload.svg";
 import EditIcon from "../icons/edit.svg";
@@ -36,8 +34,6 @@ import { Avatar } from "./emoji";
 import { AvatarPicker } from "./avatar-picker";
 import Locale, { AllLangs, ALL_LANG_OPTIONS, Lang } from "../locales";
 import { useNavigate } from "react-router-dom";
-
-import chatStyle from "./chat.module.scss";
 import { useState } from "react";
 import {
   copyToClipboard,
@@ -267,15 +263,15 @@ function ContextPromptItem(props: {
   const [focusingInput, setFocusingInput] = useState(false);
 
   return (
-    <div className={chatStyle["context-prompt-row"]}>
+    <div className="flex w-full justify-center group">
       {!focusingInput && (
         <>
-          <div className={chatStyle["context-drag"]}>
+          <div className="flex items-center opacity-50 [transition:all_ease_0.3s] group-hover:opacity-100">
             <DragIcon />
           </div>
           <Select
             value={props.prompt.role}
-            className={chatStyle["context-role"]}
+            className="mr-2.5"
             onChange={(e) =>
               props.update({
                 ...props.prompt,
@@ -294,7 +290,7 @@ function ContextPromptItem(props: {
       <Input
         value={getMessageTextContent(props.prompt)}
         type="text"
-        className={chatStyle["context-content"]}
+        className="max-w-full flex-1 text-left"
         rows={focusingInput ? 5 : 1}
         onFocus={() => setFocusingInput(true)}
         onBlur={() => {
@@ -313,7 +309,7 @@ function ContextPromptItem(props: {
       {!focusingInput && (
         <IconButton
           icon={<DeleteIcon />}
-          className={chatStyle["context-delete-button"]}
+          className="ml-2.5"
           onClick={() => props.remove()}
           bordered
         />
@@ -367,7 +363,7 @@ export function ContextPrompts(props: {
 
   return (
     <>
-      <div className={chatStyle["context-prompt"]} style={{ marginBottom: 20 }}>
+      <div className="" style={{ marginBottom: 20 }}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="context-prompt-list">
             {(provided) => (
@@ -391,7 +387,7 @@ export function ContextPrompts(props: {
                           remove={() => removeContextPrompt(i)}
                         />
                         <div
-                          className={chatStyle["context-prompt-insert"]}
+                          className="mb-1 mt-1 flex cursor-pointer justify-center rounded bg-transparent p-1 opacity-20 [transition:all_ease_0.3s] hover:bg-black/5 hover:opacity-100"
                           onClick={() => {
                             addContextPrompt(
                               createMessage({
@@ -416,12 +412,12 @@ export function ContextPrompts(props: {
         </DragDropContext>
 
         {props.context.length === 0 && (
-          <div className={chatStyle["context-prompt-row"]}>
+          <div className="flex w-full justify-center group">
             <IconButton
               icon={<AddIcon />}
               text={Locale.Context.Add}
               bordered
-              className={chatStyle["context-prompt-button"]}
+              className="flex-1"
               onClick={() =>
                 addContextPrompt(
                   createMessage({
@@ -500,7 +496,7 @@ export function MaskPage() {
 
   return (
     <ErrorBoundary>
-      <div className={styles["mask-page"]}>
+      <div className="flex h-full flex-col">
         <div className="window-header">
           <div className="window-header-title">
             <div className="window-header-main-title">
@@ -538,17 +534,17 @@ export function MaskPage() {
           </div>
         </div>
 
-        <div className={styles["mask-page-body"]}>
-          <div className={styles["mask-filter"]}>
+        <div className="overflow-y-auto p-5">
+          <div className="mb-5 flex h-10 w-full max-w-full [animation:slide-in_ease_0.3s]">
             <input
               type="text"
-              className={styles["search-bar"]}
+              className="min-w-0 max-w-full grow"
               placeholder={Locale.Mask.Page.Search}
               autoFocus
               onInput={(e) => onSearch(e.currentTarget.value)}
             />
             <Select
-              className={styles["mask-filter-lang"]}
+              className="ml-2.5 h-full"
               value={filterLang ?? Locale.Settings.Lang.All}
               onChange={(e) => {
                 const value = e.currentTarget.value;
@@ -570,7 +566,7 @@ export function MaskPage() {
             </Select>
 
             <IconButton
-              className={styles["mask-create"]}
+              className="ml-2.5 box-border h-full min-w-20"
               icon={<AddIcon />}
               text={Locale.Mask.Page.Create}
               bordered
@@ -583,21 +579,24 @@ export function MaskPage() {
 
           <div>
             {masks.map((m) => (
-              <div className={styles["mask-item"]} key={m.id}>
-                <div className={styles["mask-header"]}>
-                  <div className={styles["mask-icon"]}>
+              <div
+                className="flex justify-between p-5 [animation:slide-in_ease_0.3s] [border:var(--border-in-light)] [&:not(:last-child)]:border-b-0 first:rounded-t-[10px] last:rounded-b-[10px] max-[600px]:mb-5 max-[600px]:flex-col max-[600px]:rounded-[10px] max-[600px]:pb-2.5 max-[600px]:shadow-card max-[600px]:[&:not(:last-child)]:[border-bottom:var(--border-in-light)]"
+                key={m.id}
+              >
+                <div className="flex items-center">
+                  <div className="mr-2.5 flex items-center justify-center">
                     <MaskAvatar avatar={m.avatar} model={m.modelConfig.model} />
                   </div>
-                  <div className={styles["mask-title"]}>
-                    <div className={styles["mask-name"]}>{m.name}</div>
-                    <div className={clsx(styles["mask-info"], "one-line")}>
+                  <div>
+                    <div className="text-sm font-bold">{m.name}</div>
+                    <div className={clsx("text-xs", "one-line")}>
                       {`${Locale.Mask.Item.Info(m.context.length)} / ${
                         ALL_LANG_OPTIONS[m.lang]
                       } / ${m.modelConfig.model}`}
                     </div>
                   </div>
                 </div>
-                <div className={styles["mask-actions"]}>
+                <div className="flex flex-nowrap [transition:all_ease_0.3s] max-[600px]:w-full max-[600px]:justify-between max-[600px]:pt-2.5">
                   <IconButton
                     icon={<AddIcon />}
                     text={Locale.Mask.Item.Chat}

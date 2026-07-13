@@ -6,7 +6,6 @@ import { InputRange } from "./input-range";
 import { ListItem, Select } from "./ui-lib";
 import { useAllModels } from "../utils/hooks";
 import { groupBy } from "lodash-es";
-import styles from "./model-config.module.scss";
 import { getModelProvider } from "../utils/model";
 
 export function ModelConfigList(props: {
@@ -278,7 +277,7 @@ export function ModelConfigList(props: {
         subTitle={Locale.Settings.CompressModel.SubTitle}
       >
         <Select
-          className={styles["select-compress-model"]}
+          className="w-3/5 [&_select]:max-w-full [&_select]:whitespace-normal"
           aria-label={Locale.Settings.CompressModel.Title}
           value={compressModelValue}
           onChange={(e) => {

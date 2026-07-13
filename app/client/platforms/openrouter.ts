@@ -5,10 +5,10 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  ChatMessageTool,
   usePluginStore,
 } from "@/app/store";
-import { streamWithThink } from "@/app/utils/chat";
+import { streamWithAISDK } from "../ai-sdk/stream";
+import { createChatModel } from "../ai-sdk/providers";
 import {
   ChatOptions,
   getHeaders,
@@ -137,89 +137,33 @@ export class OpenRouterApi implements LLMApi {
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-        return streamWithThink(
-          chatPath,
-          requestPayload,
-          getHeaders(),
-          tools as any,
+
+        // Route streaming through the Vercel AI SDK using a per-provider
+        // (OpenAI-compatible) client pointed at the same base URL and auth
+        // headers NextChat already resolves.
+        clearTimeout(requestTimeoutId);
+        const baseURL = chatPath.replace(/\/chat\/completions$/, "");
+        const model = createChatModel({
+          kind: "openai-compatible",
+          name: "openrouter",
+          model: modelConfig.model,
+          baseURL,
+          headers: getHeaders(),
+        });
+
+        return streamWithAISDK({
+          model,
+          messages: filteredMessages,
+          temperature: modelConfig.temperature,
+          topP: modelConfig.top_p,
+          presencePenalty: modelConfig.presence_penalty,
+          frequencyPenalty: modelConfig.frequency_penalty,
+          tools: tools as any[],
           funcs,
           controller,
-          // parseSSE
-          (text: string, runTools: ChatMessageTool[]) => {
-            const json = JSON.parse(text);
-            const choices = json.choices as Array<{
-              delta: {
-                content: string | null;
-                tool_calls: ChatMessageTool[];
-                reasoning_content: string | null;
-              };
-            }>;
-            const tool_calls = choices[0]?.delta?.tool_calls;
-            if (tool_calls?.length > 0) {
-              const index = tool_calls[0]?.index;
-              const id = tool_calls[0]?.id;
-              const args = tool_calls[0]?.function?.arguments;
-              if (id) {
-                runTools.push({
-                  id,
-                  type: tool_calls[0]?.type,
-                  function: {
-                    name: tool_calls[0]?.function?.name as string,
-                    arguments: args,
-                  },
-                });
-              } else {
-                // @ts-ignore
-                runTools[index]["function"]["arguments"] += args;
-              }
-            }
-            const reasoning = choices[0]?.delta?.reasoning_content;
-            const content = choices[0]?.delta?.content;
-
-            if (
-              (!reasoning || reasoning.length === 0) &&
-              (!content || content.length === 0)
-            ) {
-              return {
-                isThinking: false,
-                content: "",
-              };
-            }
-
-            if (reasoning && reasoning.length > 0) {
-              return {
-                isThinking: true,
-                content: reasoning,
-              };
-            } else if (content && content.length > 0) {
-              return {
-                isThinking: false,
-                content: content,
-              };
-            }
-
-            return {
-              isThinking: false,
-              content: "",
-            };
-          },
-          // processToolMessage
-          (
-            requestPayload: RequestPayload,
-            toolCallMessage: any,
-            toolCallResult: any[],
-          ) => {
-            // @ts-ignore
-            requestPayload?.messages?.splice(
-              // @ts-ignore
-              requestPayload?.messages?.length,
-              0,
-              toolCallMessage,
-              ...toolCallResult,
-            );
-          },
           options,
-        );
+          timeoutMs: getTimeoutMSByModel(options.config.model),
+        });
       } else {
         const res = await fetch(chatPath, chatPayload);
         clearTimeout(requestTimeoutId);

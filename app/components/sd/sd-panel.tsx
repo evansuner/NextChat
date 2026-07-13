@@ -1,4 +1,3 @@
-import styles from "./sd-panel.module.scss";
 import React from "react";
 import { Select } from "@/app/components/ui-lib";
 import { IconButton } from "@/app/components/button";
@@ -137,9 +136,14 @@ export function ControlParamItem(props: {
   className?: string;
 }) {
   return (
-    <div className={clsx(styles["ctrl-param-item"], props.className)}>
-      <div className={styles["ctrl-param-item-header"]}>
-        <div className={styles["ctrl-param-item-title"]}>
+    <div
+      className={clsx(
+        "flex flex-col justify-between min-h-10 py-2.5 animate-[slide-in_ease_0.6s] [&_textarea]:appearance-none [&_textarea]:rounded-[10px] [&_textarea]:[border:var(--border-in-light)] [&_textarea]:min-h-9 [&_textarea]:box-border [&_textarea]:bg-white [&_textarea]:text-black [&_textarea]:px-2.5 [&_textarea]:max-w-[50%] [&_textarea]:font-[inherit]",
+        props.className,
+      )}
+    >
+      <div className="flex items-center">
+        <div className="text-sm [font-weight:bolder] mb-1.25">
           <div>
             {props.title}
             {props.required && <span style={{ color: "red" }}>*</span>}
@@ -148,9 +152,7 @@ export function ControlParamItem(props: {
       </div>
       {props.children}
       {props.subTitle && (
-        <div className={styles["ctrl-param-item-sub-title"]}>
-          {props.subTitle}
-        </div>
+        <div className="text-xs font-normal mt-0.75">{props.subTitle}</div>
       )}
     </div>
   );
@@ -297,7 +299,7 @@ export function SdPanel() {
   return (
     <>
       <ControlParamItem title={Locale.SdPanel.AIModel}>
-        <div className={styles["ai-models"]}>
+        <div className="[&_button]:mb-2.5 [&_button]:p-2.5 [&_button]:w-full">
           {models.map((item) => {
             return (
               <IconButton

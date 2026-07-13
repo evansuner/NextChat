@@ -1,6 +1,5 @@
 import { IconButton } from "./button";
 import { ErrorBoundary } from "./error";
-import styles from "./mcp-market.module.scss";
 import EditIcon from "../icons/edit.svg";
 import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
@@ -346,12 +345,13 @@ export function McpMarketPage() {
               subTitle={prop.description}
               vertical
             >
-              <div className={styles["path-list"]}>
+              <div className="flex w-full flex-col gap-2.5">
                 {(currentValue as string[]).map(
                   (value: string, index: number) => (
-                    <div key={index} className={styles["path-item"]}>
+                    <div key={index} className="flex w-full gap-2.5">
                       <input
                         type="text"
+                        className="box-border w-full max-w-full flex-1 rounded-[10px] bg-white p-2.5 text-sm text-black [border:var(--border-in-light)] hover:[border-color:var(--gray-300)] focus:outline-none focus:[border-color:var(--primary)] focus:[box-shadow:0_0_0_2px_var(--primary-10)]"
                         value={value}
                         placeholder={`${itemLabel} ${index + 1}`}
                         onChange={(e) => {
@@ -362,7 +362,7 @@ export function McpMarketPage() {
                       />
                       <IconButton
                         icon={<DeleteIcon />}
-                        className={styles["delete-button"]}
+                        className="rounded-[10px] bg-transparent p-2 [color:var(--black-50)] [border:var(--border-in-light)] hover:bg-transparent hover:[border-color:var(--danger)] hover:[color:var(--danger)] [&_svg]:h-4 [&_svg]:w-4"
                         onClick={() => {
                           const newValue = [...currentValue] as string[];
                           newValue.splice(index, 1);
@@ -375,7 +375,7 @@ export function McpMarketPage() {
                 <IconButton
                   icon={<AddIcon />}
                   text={addButtonText}
-                  className={styles["add-button"]}
+                  className="mt-1.25 flex items-center gap-1.25 self-start rounded-[10px] bg-transparent px-3 py-2 text-xs text-black [border:var(--border-in-light)] hover:bg-transparent hover:text-primary hover:[border-color:var(--primary)] [&_svg]:h-4 [&_svg]:w-4"
                   bordered
                   onClick={() => {
                     const newValue = [...currentValue, ""] as string[];
@@ -417,20 +417,24 @@ export function McpMarketPage() {
       undefined: null, // 未配置/未找到不显示
       // 添加初始化状态
       initializing: (
-        <span className={clsx(styles["server-status"], styles["initializing"])}>
+        <span className="ml-2.5 inline-flex items-center rounded bg-[#f59e0b] px-2 py-0.5 text-xs text-[#fff] [animation:pulse_1.5s_infinite]">
           Initializing
         </span>
       ),
       paused: (
-        <span className={clsx(styles["server-status"], styles["stopped"])}>
+        <span className="ml-2.5 inline-flex items-center rounded bg-[#6b7280] px-2 py-0.5 text-xs text-[#fff]">
           Stopped
         </span>
       ),
-      active: <span className={styles["server-status"]}>Running</span>,
+      active: (
+        <span className="ml-2.5 inline-flex items-center rounded bg-[#22c55e] px-2 py-0.5 text-xs text-[#fff]">
+          Running
+        </span>
+      ),
       error: (
-        <span className={clsx(styles["server-status"], styles["error"])}>
+        <span className="ml-2.5 inline-flex items-center rounded bg-[#ef4444] px-2 py-0.5 text-xs text-[#fff]">
           Error
-          <span className={styles["error-message"]}>: {status.errorMsg}</span>
+          <span className="ml-1 text-xs">: {status.errorMsg}</span>
         </span>
       ),
     };
@@ -450,8 +454,8 @@ export function McpMarketPage() {
   const renderServerList = () => {
     if (loadingPresets) {
       return (
-        <div className={styles["loading-container"]}>
-          <div className={styles["loading-text"]}>
+        <div className="flex min-h-[200px] w-full items-center justify-center rounded-[10px] bg-white [border:var(--border-in-light)] [animation:slide-in_ease_0.3s]">
+          <div className="text-center text-sm text-black opacity-50">
             Loading preset server list...
           </div>
         </div>
@@ -460,8 +464,10 @@ export function McpMarketPage() {
 
     if (!Array.isArray(presetServers) || presetServers.length === 0) {
       return (
-        <div className={styles["empty-container"]}>
-          <div className={styles["empty-text"]}>No servers available</div>
+        <div className="flex min-h-[200px] w-full items-center justify-center rounded-[10px] bg-white [border:var(--border-in-light)] [animation:slide-in_ease_0.3s]">
+          <div className="text-center text-sm text-black opacity-50">
+            No servers available
+          </div>
         </div>
       );
     }
@@ -523,18 +529,20 @@ export function McpMarketPage() {
       })
       .map((server) => (
         <div
-          className={clsx(styles["mcp-market-item"], {
-            [styles["loading"]]: loadingStates[server.id],
-          })}
+          className={clsx(
+            "bg-white p-5 [transition:all_0.3s_ease] [border:var(--border-in-light)] [animation:slide-in_ease_0.3s] first:rounded-t-[10px] last:rounded-b-[10px] [&:not(:last-child)]:border-b-0",
+            loadingStates[server.id] &&
+              "relative after:absolute after:inset-0 after:content-[''] after:[background:linear-gradient(90deg,transparent,rgba(255,255,255,0.2),transparent)] after:[background-size:200%_100%] after:[animation:loading-pulse_1.5s_infinite]",
+          )}
           key={server.id}
         >
-          <div className={styles["mcp-market-header"]}>
-            <div className={styles["mcp-market-title"]}>
-              <div className={styles["mcp-market-name"]}>
+          <div className="flex w-full items-start justify-between">
+            <div className="mr-5 max-w-[calc(100%-300px)] grow">
+              <div className="mb-2 flex items-center gap-2 text-sm font-bold">
                 {server.name}
                 {loadingStates[server.id] && (
                   <span
-                    className={styles["operation-status"]}
+                    className="ml-2.5 inline-flex items-center rounded bg-[#16a34a] px-2 py-0.5 text-xs text-[#fff] [animation:pulse_1.5s_infinite] data-[status=stopping]:bg-[#9ca3af] data-[status=starting]:bg-[#4ade80] data-[status=error]:bg-[#f87171]"
                     data-status={getOperationStatusType(
                       loadingStates[server.id],
                     )}
@@ -548,28 +556,34 @@ export function McpMarketPage() {
                     href={server.repo}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={styles["repo-link"]}
+                    className="inline-flex items-center gap-1 text-xs text-primary no-underline opacity-80 [transition:opacity_0.2s] hover:opacity-100 [&_svg]:h-3.5 [&_svg]:w-3.5"
                     title="Open repository"
                   >
                     <GithubIcon />
                   </a>
                 )}
               </div>
-              <div className={styles["tags-container"]}>
+              <div className="mb-2 flex flex-wrap gap-1">
                 {server.tags.map((tag, index) => (
-                  <span key={index} className={styles["tag"]}>
+                  <span
+                    key={index}
+                    className="rounded bg-gray px-1.5 py-0.5 text-[10px] text-black opacity-80"
+                  >
                     {tag}
                   </span>
                 ))}
               </div>
               <div
-                className={clsx(styles["mcp-market-info"], "one-line")}
+                className={clsx(
+                  "overflow-hidden text-ellipsis whitespace-nowrap text-xs text-black",
+                  "one-line",
+                )}
                 title={server.description}
               >
                 {server.description}
               </div>
             </div>
-            <div className={styles["mcp-market-actions"]}>
+            <div className="flex min-w-[180px] shrink-0 items-start justify-end gap-3">
               {isServerAdded(server.id) ? (
                 <>
                   {server.configurable && (
@@ -634,13 +648,13 @@ export function McpMarketPage() {
 
   return (
     <ErrorBoundary>
-      <div className={styles["mcp-market-page"]}>
+      <div className="flex h-full flex-col">
         <div className="window-header">
           <div className="window-header-title">
             <div className="window-header-main-title">
               MCP Market
               {loadingStates["all"] && (
-                <span className={styles["loading-indicator"]}>
+                <span className="ml-2 text-xs font-normal text-primary opacity-80">
                   {loadingStates["all"]}
                 </span>
               )}
@@ -671,18 +685,18 @@ export function McpMarketPage() {
           </div>
         </div>
 
-        <div className={styles["mcp-market-page-body"]}>
-          <div className={styles["mcp-market-filter"]}>
+        <div className="overflow-y-auto p-5">
+          <div className="mb-5 flex h-10 w-full max-w-full [animation:slide-in_ease_0.3s]">
             <input
               type="text"
-              className={styles["search-bar"]}
+              className="min-w-0 max-w-full grow"
               placeholder={"Search MCP Server"}
               autoFocus
               onInput={(e) => setSearchText(e.currentTarget.value)}
             />
           </div>
 
-          <div className={styles["server-list"]}>{renderServerList()}</div>
+          <div className="flex flex-col gap-px">{renderServerList()}</div>
         </div>
 
         {/*编辑服务器配置*/}
@@ -728,15 +742,17 @@ export function McpMarketPage() {
                 />,
               ]}
             >
-              <div className={styles["tools-list"]}>
+              <div className="box-border flex w-full max-w-full flex-col gap-4 overflow-x-hidden break-words p-5">
                 {isLoading ? (
                   <div>Loading...</div>
                 ) : tools?.tools ? (
                   tools.tools.map(
                     (tool: ListToolsResponse["tools"], index: number) => (
-                      <div key={index} className={styles["tool-item"]}>
-                        <div className={styles["tool-name"]}>{tool.name}</div>
-                        <div className={styles["tool-description"]}>
+                      <div key={index} className="box-border w-full">
+                        <div className="mb-2 box-border w-full pl-3 text-sm font-semibold text-black [border-left:3px_solid_var(--primary)]">
+                          {tool.name}
+                        </div>
+                        <div className="box-border w-full pl-[15px] text-[13px] leading-[1.6] [color:var(--gray-500)]">
                           {tool.description}
                         </div>
                       </div>

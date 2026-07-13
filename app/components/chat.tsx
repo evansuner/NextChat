@@ -51,6 +51,7 @@ import HeadphoneIcon from "../icons/headphone.svg";
 import {
   BOT_HELLO,
   ChatMessage,
+  ChatMessageTool,
   createMessage,
   DEFAULT_TOPIC,
   ModelType,
@@ -87,7 +88,6 @@ import { Prompt, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
 
 import { IconButton } from "./button";
-import styles from "./chat.module.scss";
 
 import {
   List,
@@ -116,7 +116,10 @@ import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 import { getClientConfig } from "../config/client";
 import { useAllModels } from "../utils/hooks";
-import { ClientApi, MultimodalContent } from "../client/api";
+import { ClientApi, getClientApi, MultimodalContent } from "../client/api";
+import { NextChatTransport } from "../client/ai-sdk/chat-transport";
+import { extractUIText, extractUITools } from "../client/ai-sdk/ui-message";
+import { useChat } from "@ai-sdk/react";
 import { createTTSPlayer } from "../utils/audio";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
 
@@ -240,15 +243,21 @@ function PromptToast(props: {
   const context = session.mask.context;
 
   return (
-    <div className={styles["prompt-toast"]} key="prompt-toast">
+    <div
+      className="absolute -bottom-12.5 z-999 flex w-[calc(100%-40px)] justify-center"
+      key="prompt-toast"
+    >
       {props.showToast && context.length > 0 && (
         <div
-          className={clsx(styles["prompt-toast-inner"], "clickable")}
+          className={clsx(
+            "flex items-center justify-center rounded-[100px] bg-white px-5 py-2.5 text-xs text-black shadow-card animate-[slide-in-from-top_ease_0.3s] [border:var(--border-in-light)]",
+            "clickable",
+          )}
           role="button"
           onClick={() => props.setShowModal(true)}
         >
           <BrainIcon />
-          <span className={styles["prompt-toast-content"]}>
+          <span className="ml-2.5">
             {Locale.Context.Toast(context.length)}
           </span>
         </div>
@@ -360,19 +369,26 @@ export function PromptHints(props: {
 
   if (noPrompts) return null;
   return (
-    <div className={styles["prompt-hints"]}>
+    <div className="mb-2.5 flex max-h-[50vh] min-h-5 w-full flex-col-reverse overflow-auto rounded-[10px] bg-white shadow-panel [border:var(--border-in-light)]">
       {props.prompts.map((prompt, i) => (
         <div
           ref={i === selectIndex ? selectedRef : null}
-          className={clsx(styles["prompt-hint"], {
-            [styles["prompt-hint-selected"]]: i === selectIndex,
-          })}
+          className={clsx(
+            "m-1 cursor-pointer rounded-lg border border-solid border-transparent px-2.5 py-1.5 text-black animate-[slide-in_ease_0.3s] [transition:all_ease_0.3s] hover:border-primary not-last:mt-0",
+            {
+              "border-primary": i === selectIndex,
+            },
+          )}
           key={prompt.title + i.toString()}
           onClick={() => props.onPromptSelect(prompt)}
           onMouseEnter={() => setSelectIndex(i)}
         >
-          <div className={styles["hint-title"]}>{prompt.title}</div>
-          <div className={styles["hint-content"]}>{prompt.content}</div>
+          <div className="overflow-hidden text-ellipsis whitespace-nowrap text-xs [font-weight:bolder]">
+            {prompt.title}
+          </div>
+          <div className="overflow-hidden text-ellipsis whitespace-nowrap text-xs">
+            {prompt.content}
+          </div>
         </div>
       ))}
     </div>
@@ -385,7 +401,7 @@ function ClearContextDivider() {
 
   return (
     <div
-      className={styles["clear-context"]}
+      className="group relative mt-5 flex cursor-pointer items-center justify-center overflow-hidden py-1 text-xs text-black animate-[slide-in_ease_0.3s] [border-bottom:var(--border-in-light)] [border-top:var(--border-in-light)] [box-shadow:var(--card-shadow)_inset] mask-[linear-gradient(to_right,rgba(0,0,0,0),rgba(0,0,0,1),rgba(0,0,0,0))] [transition:all_ease_0.3s] hover:border-primary hover:opacity-100"
       onClick={() =>
         chatStore.updateTargetSession(
           session,
@@ -393,8 +409,10 @@ function ClearContextDivider() {
         )
       }
     >
-      <div className={styles["clear-context-tips"]}>{Locale.Context.Clear}</div>
-      <div className={styles["clear-context-revert-btn"]}>
+      <div className="relative translate-y-0 opacity-50 [transition:all_ease_0.3s] group-hover:absolute group-hover:-translate-y-1/2 group-hover:opacity-0 group-hover:[transition:all_ease_0.1s]">
+        {Locale.Context.Clear}
+      </div>
+      <div className="absolute -translate-y-1/2 text-primary opacity-0 [transition:all_ease_0.1s] group-hover:relative group-hover:translate-y-0 group-hover:opacity-100 group-hover:[transition:all_ease_0.3s]">
         {Locale.Context.Revert}
       </div>
     </div>
@@ -426,7 +444,10 @@ export function ChatAction(props: {
 
   return (
     <div
-      className={clsx(styles["chat-input-action"], "clickable")}
+      className={clsx(
+        "chat-input-action group inline-flex h-4 w-(--icon-width) items-center overflow-hidden rounded-[20px] bg-white px-2.5 py-1 text-xs text-black shadow-card animate-[slide-in_ease_0.3s] [border:var(--border-in-light)] [transition:width_ease_0.3s] hover:w-(--full-width) hover:delay-500",
+        "clickable",
+      )}
       onClick={() => {
         props.onClick();
         setTimeout(updateWidth, 1);
@@ -440,10 +461,13 @@ export function ChatAction(props: {
         } as React.CSSProperties
       }
     >
-      <div ref={iconRef} className={styles["icon"]}>
+      <div ref={iconRef} className="flex items-center justify-center">
         {props.icon}
       </div>
-      <div className={styles["text"]} ref={textRef}>
+      <div
+        className="flex -translate-x-1.25 items-center justify-center whitespace-nowrap pl-1.25 opacity-0 pointer-events-none [transition:all_ease_0.3s] group-hover:translate-x-0 group-hover:opacity-100 group-hover:delay-500"
+        ref={textRef}
+      >
         {props.text}
       </div>
     </div>
@@ -597,7 +621,7 @@ export function ChatActions(props: {
   }, [chatStore, currentModel, models, session]);
 
   return (
-    <div className={styles["chat-input-actions"]}>
+    <div className="flex flex-wrap justify-between gap-1.25">
       <>
         {couldStop && (
           <ChatAction
@@ -834,7 +858,7 @@ export function ChatActions(props: {
         )}
         {!isMobileScreen && <MCPAction />}
       </>
-      <div className={styles["chat-input-actions-end"]}>
+      <div className="ml-auto flex gap-1.25">
         {config.realtimeConfig.enable && (
           <ChatAction
             onClick={() => props.setShowChatSidePanel(true)}
@@ -913,7 +937,10 @@ export function EditMessageModal(props: { onClose: () => void }) {
 
 export function DeleteImageButton(props: { deleteImage: () => void }) {
   return (
-    <div className={styles["delete-image"]} onClick={props.deleteImage}>
+    <div
+      className="float-right flex h-6 w-6 cursor-pointer items-center justify-center rounded-[5px] bg-white"
+      onClick={props.deleteImage}
+    >
       <DeleteIcon />
     </div>
   );
@@ -963,16 +990,20 @@ export function ShortcutKeyModal(props: { onClose: () => void }) {
           />,
         ]}
       >
-        <div className={styles["shortcut-key-container"]}>
-          <div className={styles["shortcut-key-grid"]}>
+        <div className="flex flex-col overflow-y-auto p-2.5">
+          <div className="grid gap-4 grid-cols-[repeat(auto-fit,minmax(350px,1fr))]">
             {shortcuts.map((shortcut, index) => (
-              <div key={index} className={styles["shortcut-key-item"]}>
-                <div className={styles["shortcut-key-title"]}>
-                  {shortcut.title}
-                </div>
-                <div className={styles["shortcut-key-keys"]}>
+              <div
+                key={index}
+                className="flex items-center justify-between overflow-hidden bg-white p-2.5"
+              >
+                <div className="text-sm text-black">{shortcut.title}</div>
+                <div className="flex gap-2">
                   {shortcut.keys.map((key, i) => (
-                    <div key={i} className={styles["shortcut-key"]}>
+                    <div
+                      key={i}
+                      className="flex min-w-8 items-center justify-center rounded-lg bg-gray p-1 [border:var(--border-in-light)] [&_span]:text-xs [&_span]:text-black"
+                    >
                       <span>{key}</span>
                     </div>
                   ))}
@@ -1010,7 +1041,7 @@ function _Chat() {
     : false;
   const isAttachWithTop = useMemo(() => {
     const lastMessage = scrollRef.current?.lastElementChild as HTMLElement;
-    // if scrolllRef is not ready or no message, return false
+    // if scrollRef is not ready or no message, return false
     if (!scrollRef?.current || !lastMessage) return false;
     const topDistance =
       lastMessage!.getBoundingClientRect().top -
@@ -1033,6 +1064,145 @@ function _Chat() {
   const navigate = useNavigate();
   const [attachImages, setAttachImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
+
+  // === AI SDK UI (useChat) integration ==================================
+  // The conversation is streamed through AI SDK UI's `useChat` hook. A custom
+  // client-side transport drives NextChat's existing per-provider clients (no
+  // server route) and streams the assistant response into the store-backed
+  // placeholder message, so the original rendering/editing/export UI keeps
+  // working while `useChat` owns the live streaming state.
+  const botMessageIdRef = useRef<string | null>(null);
+
+  const transport = useMemo(
+    () =>
+      new NextChatTransport(async () => {
+        const store = useChatStore.getState();
+        const currentSession = store.currentSession();
+        const modelConfig = currentSession.mask.modelConfig;
+        const messages = await store.getMessagesForSend();
+        const api = getClientApi(
+          modelConfig.providerName as unknown as ServiceProvider,
+        );
+        return {
+          api,
+          messages,
+          config: { ...modelConfig, stream: true },
+          sessionId: currentSession.id,
+          messageId: botMessageIdRef.current ?? undefined,
+        };
+      }),
+    [],
+  );
+
+  const finalizeBotMessage = useCallback(
+    (opts: {
+      isError?: boolean;
+      isAbort?: boolean;
+      errorMessage?: string;
+      finalText?: string;
+      finalTools?: ChatMessageTool[];
+    }) => {
+      const bid = botMessageIdRef.current;
+      if (!bid) return;
+      botMessageIdRef.current = null;
+
+      const store = useChatStore.getState();
+      const target = store.currentSession();
+      store.updateTargetSession(target, (s) => {
+        const bm = s.messages.find((m) => m.id === bid);
+        if (!bm) return;
+        bm.streaming = false;
+        bm.date = new Date().toLocaleString();
+        if (opts.isError) {
+          bm.isError = !opts.isAbort;
+          bm.content =
+            getMessageTextContent(bm) +
+            "\n\n" +
+            prettyObject({ error: true, message: opts.errorMessage });
+          // also flag the preceding user message like the original flow
+          const idx = s.messages.findIndex((m) => m.id === bid);
+          for (let i = idx - 1; i >= 0; i--) {
+            if (s.messages[i].role === "user") {
+              s.messages[i].isError = !opts.isAbort;
+              break;
+            }
+          }
+        } else {
+          // Authoritatively write the final streamed content/tools so nothing
+          // is lost if the last chunk coincides with the status change.
+          if (opts.finalText) bm.content = opts.finalText;
+          if (opts.finalTools && opts.finalTools.length) bm.tools = opts.finalTools;
+        }
+      });
+
+      if (!opts.isError && !opts.isAbort) {
+        const fresh = store.currentSession();
+        const bm = fresh.messages.find((m) => m.id === bid);
+        if (bm) store.onNewMessage(bm, fresh);
+      }
+    },
+    [],
+  );
+
+  const chat = useChat({
+    id: session.id,
+    transport,
+    onError(error) {
+      const isAbort = !!error?.message?.includes?.("aborted");
+      finalizeBotMessage({
+        isError: true,
+        isAbort,
+        errorMessage: error?.message,
+      });
+      console.error("[Chat] failed ", error);
+    },
+    onFinish({ message, isAbort, isError }) {
+      finalizeBotMessage({
+        isError,
+        isAbort,
+        finalText: extractUIText(message),
+        finalTools: extractUITools(message),
+      });
+    },
+  });
+
+  // Mirror the live streaming assistant message from useChat into the
+  // store-backed placeholder so the original render path shows the response.
+  useEffect(() => {
+    const bid = botMessageIdRef.current;
+    if (!bid) return;
+    if (chat.status !== "streaming" && chat.status !== "submitted") return;
+    const last = chat.messages[chat.messages.length - 1];
+    if (!last || last.role !== "assistant") return;
+    const text = extractUIText(last);
+    const tools = extractUITools(last);
+    const store = useChatStore.getState();
+    store.updateTargetSession(store.currentSession(), (s) => {
+      const bm = s.messages.find((m) => m.id === bid);
+      if (!bm) return;
+      if (text) bm.content = text;
+      if (tools.length) bm.tools = tools;
+      bm.streaming = true;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chat.messages, chat.status]);
+
+  const runChatTurn = useCallback(
+    (content: string, images: string[]) => {
+      const { botMessageId } = useChatStore
+        .getState()
+        .prepareUserTurn(content, images);
+      botMessageIdRef.current = botMessageId;
+      // The transport reads the request from the store, so useChat's own
+      // buffer only needs to trigger a turn — reset it and send.
+      chat.setMessages([]);
+      chat.sendMessage({ text: content.length > 0 ? content : "[image]" }).catch((e) => {
+        finalizeBotMessage({ isError: true, errorMessage: String(e) });
+      });
+    },
+    [chat, finalizeBotMessage],
+  );
+  // ======================================================================
 
   // prompt hints
   const promptStore = usePromptStore();
@@ -1112,9 +1282,8 @@ function _Chat() {
       return;
     }
     setIsLoading(true);
-    chatStore
-      .onUserInput(userInput, attachImages)
-      .then(() => setIsLoading(false));
+    runChatTurn(userInput, attachImages);
+    setIsLoading(false);
     setAttachImages([]);
     chatStore.setLastInput(userInput);
     setUserInput("");
@@ -1266,7 +1435,8 @@ function _Chat() {
     setIsLoading(true);
     const textContent = getMessageTextContent(userMessage);
     const images = getMessageImages(userMessage);
-    chatStore.onUserInput(textContent, images).then(() => setIsLoading(false));
+    runChatTurn(textContent, images);
+    setIsLoading(false);
     inputRef.current?.focus();
   };
 
@@ -1681,7 +1851,7 @@ function _Chat() {
 
   return (
     <>
-      <div className={styles.chat} key={session.id}>
+      <div className="relative flex h-full flex-col" key={session.id}>
         <div className="window-header" data-tauri-drag-region>
           {isMobileScreen && (
             <div className="window-actions">
@@ -1697,12 +1867,12 @@ function _Chat() {
           )}
 
           <div
-            className={clsx("window-header-title", styles["chat-body-title"])}
+            className={clsx("window-header-title", "max-[600px]:text-center")}
           >
             <div
               className={clsx(
                 "window-header-main-title",
-                styles["chat-body-main-title"],
+                "cursor-pointer hover:underline",
               )}
               onClickCapture={() => setIsEditingMessage(true)}
             >
@@ -1768,10 +1938,10 @@ function _Chat() {
             setShowModal={setShowPromptModal}
           />
         </div>
-        <div className={styles["chat-main"]}>
-          <div className={styles["chat-body-container"]}>
+        <div className="relative flex h-full w-full overflow-hidden">
+          <div className="flex h-full w-full flex-1 flex-col">
             <div
-              className={styles["chat-body"]}
+              className="relative flex-1 overflow-auto overflow-x-hidden overscroll-none p-5 pb-10"
               ref={scrollRef}
               onScroll={(e) => onChatBodyScroll(e.currentTarget)}
               onMouseDown={() => inputRef.current?.blur()}
@@ -1800,14 +1970,24 @@ function _Chat() {
                       <div
                         className={
                           isUser
-                            ? styles["chat-message-user"]
-                            : styles["chat-message"]
+                            ? "flex flex-row-reverse"
+                            : "flex flex-row last:animate-[slide-in_ease_0.3s]"
                         }
                       >
-                        <div className={styles["chat-message-container"]}>
-                          <div className={styles["chat-message-header"]}>
-                            <div className={styles["chat-message-avatar"]}>
-                              <div className={styles["chat-message-edit"]}>
+                        <div
+                          className={clsx(
+                            "group/msg-container flex max-w-(--message-max-width) flex-col",
+                            isUser ? "items-end" : "items-start",
+                          )}
+                        >
+                          <div
+                            className={clsx(
+                              "mt-5 flex items-center",
+                              isUser && "flex-row-reverse",
+                            )}
+                          >
+                            <div className="relative">
+                              <div className="absolute flex h-full w-full items-center justify-center overflow-hidden opacity-0 [transition:all_ease_0.3s] group-hover/msg-container:opacity-90 [&_button]:p-1.75 [@media_screen_and_(max-device-width:812px)_and_(-webkit-min-device-pixel-ratio:2)]:[@supports(-webkit-touch-callout:none)]:top-[-8%]">
                                 <IconButton
                                   icon={<EditIcon />}
                                   aria={Locale.Chat.Actions.Edit}
@@ -1867,14 +2047,14 @@ function _Chat() {
                               )}
                             </div>
                             {!isUser && (
-                              <div className={styles["chat-model-name"]}>
+                              <div className="ml-1.5 text-xs text-black">
                                 {message.model}
                               </div>
                             )}
 
                             {showActions && (
-                              <div className={styles["chat-message-actions"]}>
-                                <div className={styles["chat-input-actions"]}>
+                              <div className="mx-2.5 flex translate-y-1.25 scale-90 items-end justify-between box-border text-xs opacity-0 pointer-events-none [transition:all_ease_0.3s] group-hover/msg-container:translate-y-0 group-hover/msg-container:scale-100 group-hover/msg-container:opacity-100 group-hover/msg-container:pointer-events-auto">
+                                <div className="flex flex-nowrap justify-between gap-1.25">
                                   {message.streaming ? (
                                     <ChatAction
                                       text={Locale.Chat.Actions.Stop}
@@ -1941,18 +2121,18 @@ function _Chat() {
                             )}
                           </div>
                           {message?.tools?.length == 0 && showTyping && (
-                            <div className={styles["chat-message-status"]}>
+                            <div className="mt-1.25 text-xs leading-normal text-[#aaa]">
                               {Locale.Chat.Typing}
                             </div>
                           )}
                           {/*@ts-ignore*/}
                           {message?.tools?.length > 0 && (
-                            <div className={styles["chat-message-tools"]}>
+                            <div className="mt-1.25 text-xs leading-normal text-[#aaa]">
                               {message?.tools?.map((tool) => (
                                 <div
                                   key={tool.id}
                                   title={tool?.errorMsg}
-                                  className={styles["chat-message-tool"]}
+                                  className="flex items-end [&_svg]:mx-1.25"
                                 >
                                   {tool.isError === false ? (
                                     <ConfirmIcon />
@@ -1966,7 +2146,14 @@ function _Chat() {
                               ))}
                             </div>
                           )}
-                          <div className={styles["chat-message-item"]}>
+                          <div
+                            className={clsx(
+                              "relative mt-2.5 box-border max-w-full rounded-[10px] p-2.5 text-sm select-text [border:var(--border-in-light)] [transition:all_ease_0.3s] [word-break:break-word]",
+                              isUser
+                                ? "bg-second hover:min-w-0"
+                                : "bg-[rgba(0,0,0,0.05)]",
+                            )}
+                          >
                             <Markdown
                               key={message.streaming ? "loading" : "done"}
                               content={getMessageTextContent(message)}
@@ -1987,14 +2174,14 @@ function _Chat() {
                             />
                             {getMessageImages(message).length == 1 && (
                               <img
-                                className={styles["chat-message-item-image"]}
+                                className="mt-2.5 box-border w-full rounded-[10px] [border:1px_solid_rgba(136,136,136,0.2)] max-[600px]:max-w-[calc(100vw/3*2)] min-[600px]:max-w-[calc(calc(1200px-var(--sidebar-width))/3*2)]"
                                 src={getMessageImages(message)[0]}
                                 alt=""
                               />
                             )}
                             {getMessageImages(message).length > 1 && (
                               <div
-                                className={styles["chat-message-item-images"]}
+                                className="mt-2.5 grid w-full justify-start gap-2.5 grid-cols-[repeat(var(--image-count),auto)]"
                                 style={
                                   {
                                     "--image-count":
@@ -2006,11 +2193,7 @@ function _Chat() {
                                   (image, index) => {
                                     return (
                                       <img
-                                        className={
-                                          styles[
-                                            "chat-message-item-image-multi"
-                                          ]
-                                        }
+                                        className="box-border rounded-[10px] bg-cover bg-center bg-no-repeat object-cover [border:1px_solid_rgba(136,136,136,0.2)] max-[600px]:h-[calc(100vw/3*2/var(--image-count))] max-[600px]:w-[calc(100vw/3*2/var(--image-count))] min-[600px]:h-[calc(calc(var(--window-width)-var(--sidebar-width))/3*2/var(--image-count))] min-[600px]:max-h-[calc(calc(1200px-var(--sidebar-width))/3*2/var(--image-count))] min-[600px]:w-[calc(calc(var(--window-width)-var(--sidebar-width))/3*2/var(--image-count))] min-[600px]:max-w-[calc(calc(1200px-var(--sidebar-width))/3*2/var(--image-count))]"
                                         key={index}
                                         src={image}
                                         alt=""
@@ -2022,12 +2205,12 @@ function _Chat() {
                             )}
                           </div>
                           {message?.audio_url && (
-                            <div className={styles["chat-message-audio"]}>
+                            <div className="relative mt-2.5 box-border flex items-center justify-between rounded-[10px] text-sm select-text bg-[rgba(0,0,0,0.05)] [border:var(--border-in-light)] [transition:all_ease_0.3s] [word-break:break-word] [&_audio]:h-7.5">
                               <audio src={message.audio_url} controls />
                             </div>
                           )}
 
-                          <div className={styles["chat-message-action-date"]}>
+                          <div className="pointer-events-none z-1 box-border w-full pr-2.5 text-right text-xs whitespace-nowrap text-black opacity-20 [transition:all_ease_0.6s]">
                             {isContext
                               ? Locale.Chat.IsContext
                               : message.date.toLocaleString()}
@@ -2039,7 +2222,7 @@ function _Chat() {
                   );
                 })}
             </div>
-            <div className={styles["chat-input-panel"]}>
+            <div className="relative box-border w-full flex-col p-5 pt-2.5 shadow-card [border-top:var(--border-in-light)] [&_.chat-input-action]:mb-2.5">
               <PromptHints
                 prompts={promptHints}
                 onPromptSelect={onPromptSelect}
@@ -2069,16 +2252,18 @@ function _Chat() {
                 setShowChatSidePanel={setShowChatSidePanel}
               />
               <label
-                className={clsx(styles["chat-input-panel-inner"], {
-                  [styles["chat-input-panel-inner-attach"]]:
-                    attachImages.length !== 0,
-                })}
+                className={clsx(
+                  "flex flex-1 cursor-text rounded-[10px] [border:var(--border-in-light)] [&:has(.chat-input:focus)]:[border:1px_solid_var(--primary)]",
+                  {
+                    "pb-20": attachImages.length !== 0,
+                  },
+                )}
                 htmlFor="chat-input"
               >
                 <textarea
                   id="chat-input"
                   ref={inputRef}
-                  className={styles["chat-input"]}
+                  className="chat-input box-border h-full min-h-17 w-full resize-none rounded-[10px] border-none bg-white font-[inherit] text-black outline-none [box-shadow:0_-2px_5px_rgba(0,0,0,0.03)] p-[10px_90px_10px_14px] max-[600px]:text-base"
                   placeholder={Locale.Chat.Input(submitKey)}
                   onInput={(e) => onInput(e.currentTarget.value)}
                   value={userInput}
@@ -2094,15 +2279,15 @@ function _Chat() {
                   }}
                 />
                 {attachImages.length != 0 && (
-                  <div className={styles["attach-images"]}>
+                  <div className="absolute bottom-8 left-7.5 flex">
                     {attachImages.map((image, index) => {
                       return (
                         <div
                           key={index}
-                          className={styles["attach-image"]}
+                          className="mr-2.5 h-16 w-16 cursor-default rounded-[5px] bg-white bg-cover bg-center [border:1px_solid_rgba(136,136,136,0.2)]"
                           style={{ backgroundImage: `url("${image}")` }}
                         >
-                          <div className={styles["attach-image-mask"]}>
+                          <div className="h-full w-full opacity-0 [transition:all_ease_0.2s] hover:opacity-100">
                             <DeleteImageButton
                               deleteImage={() => {
                                 setAttachImages(
@@ -2119,7 +2304,7 @@ function _Chat() {
                 <IconButton
                   icon={<SendWhiteIcon />}
                   text={Locale.Chat.Send}
-                  className={styles["chat-input-send"]}
+                  className="absolute right-7.5 bottom-8 bg-primary text-white max-[600px]:bottom-7.5"
                   type="primary"
                   onClick={() => doSubmit(userInput)}
                 />
@@ -2127,10 +2312,10 @@ function _Chat() {
             </div>
           </div>
           <div
-            className={clsx(styles["chat-side-panel"], {
-              [styles["mobile"]]: isMobileScreen,
-              [styles["chat-side-panel-show"]]: showChatSidePanel,
-            })}
+            className={clsx(
+              "absolute inset-0 z-10 overflow-hidden bg-white [transition:all_ease_0.3s]",
+              showChatSidePanel ? "translate-x-0" : "translate-x-full",
+            )}
           >
             {showChatSidePanel && (
               <RealtimeChat

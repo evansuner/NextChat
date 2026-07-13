@@ -1,7 +1,10 @@
 /* eslint-disable @next/next/no-page-custom-font */
-import "./styles/globals.scss";
-import "./styles/markdown.scss";
-import "./styles/highlight.scss";
+import "./styles/animation.css";
+import "./styles/window.css";
+import "./styles/globals.css";
+import "./styles/markdown.css";
+import "./styles/highlight.css";
+import "./styles/tailwind.css";
 import { getClientConfig } from "./config/client";
 import type { Metadata, Viewport } from "next";
 

@@ -20,7 +20,6 @@ import { Modal, showToast } from "./ui-lib";
 import { copyToClipboard, downloadAs } from "../utils";
 import { Path, ApiPath, REPO_URL } from "@/app/constant";
 import { Loading } from "./home";
-import styles from "./artifacts.module.scss";
 
 type HTMLPreviewProps = {
   code: string;
@@ -94,7 +93,7 @@ export const HTMLPreview = forwardRef<HTMLPreviewHandler, HTMLPreviewProps>(
 
     return (
       <iframe
-        className={styles["artifacts-iframe"]}
+        className="w-full rounded-md bg-gray [border:var(--border-in-light)]"
         key={frameId}
         ref={iframeRef}
         sandbox="allow-forms allow-modals allow-scripts"
@@ -227,8 +226,8 @@ export function Artifacts() {
   }, [id]);
 
   return (
-    <div className={styles["artifacts"]}>
-      <div className={styles["artifacts-header"]}>
+    <div className="flex h-full w-full flex-col">
+      <div className="flex h-9 items-center bg-second p-5">
         <a href={REPO_URL} target="_blank" rel="noopener noreferrer">
           <IconButton bordered icon={<GithubIcon />} shadow />
         </a>
@@ -239,14 +238,16 @@ export function Artifacts() {
           shadow
           onClick={() => previewRef.current?.reload()}
         />
-        <div className={styles["artifacts-title"]}>NextChat Artifacts</div>
+        <div className="flex-1 text-center text-2xl font-bold">
+          NextChat Artifacts
+        </div>
         <ArtifactsShareButton
           id={id}
           getCode={() => code}
           fileName={fileName}
         />
       </div>
-      <div className={styles["artifacts-content"]}>
+      <div className="grow bg-second px-5 pb-5">
         {loading && <Loading />}
         {code && (
           <HTMLPreview

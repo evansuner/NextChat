@@ -1,7 +1,5 @@
-@import "./animation.scss";
-@import "./window.scss";
-
-@mixin light {
+:root,
+.light {
   --theme: light;
 
   /* color */
@@ -22,7 +20,7 @@
   --border-in-light: 1px solid rgb(222, 222, 222);
 }
 
-@mixin dark {
+.dark {
   --theme: dark;
 
   /* color */
@@ -38,18 +36,10 @@
   --border-in-light: 1px solid rgba(255, 255, 255, 0.192);
 
   --theme-color: var(--gray);
-
-  div:not(.no-dark) > svg {
-    filter: invert(0.5);
-  }
 }
 
-.light {
-  @include light;
-}
-
-.dark {
-  @include dark;
+.dark div:not(.no-dark) > svg {
+  filter: invert(0.5);
 }
 
 .mask {
@@ -57,8 +47,6 @@
 }
 
 :root {
-  @include light;
-
   --window-width: 90vw;
   --window-height: 90vh;
   --sidebar-width: 300px;
@@ -83,15 +71,33 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    @include dark;
+    --theme: dark;
+
+    --white: rgb(30, 30, 30);
+    --black: rgb(187, 187, 187);
+    --gray: rgb(21, 21, 21);
+    --primary: rgb(29, 147, 171);
+    --second: rgb(27 38 42);
+    --hover-color: #323232;
+
+    --bar-color: rgba(255, 255, 255, 0.1);
+
+    --border-in-light: 1px solid rgba(255, 255, 255, 0.192);
+
+    --theme-color: var(--gray);
+  }
+
+  :root div:not(.no-dark) > svg {
+    filter: invert(0.5);
   }
 }
 
 html {
   height: var(--full-height);
 
-  font-family: "Noto Sans", "SF Pro SC", "SF Pro Text", "SF Pro Icons",
-    "PingFang SC", "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+  font-family:
+    "Noto Sans", "SF Pro SC", "SF Pro Text", "SF Pro Icons", "PingFang SC",
+    "Helvetica Neue", "Helvetica", "Arial", sans-serif;
 }
 
 body {
@@ -107,14 +113,16 @@ body {
   user-select: none;
   touch-action: pan-x pan-y;
   overflow: hidden;
+}
 
-  @media only screen and (max-width: 600px) {
+@media only screen and (max-width: 600px) {
+  body {
     background-color: var(--second);
   }
+}
 
-  *:focus-visible {
-    outline: none;
-  }
+body *:focus-visible {
+  outline: none;
 }
 
 ::-webkit-scrollbar {
@@ -183,7 +191,7 @@ input[type="range"] {
   color: var(--black);
 }
 
-@mixin thumb() {
+input[type="range"]::-webkit-slider-thumb {
   appearance: none;
   height: 8px;
   width: 20px;
@@ -195,33 +203,43 @@ input[type="range"] {
   border: none;
 }
 
-input[type="range"]::-webkit-slider-thumb {
-  @include thumb();
-}
-
 input[type="range"]::-moz-range-thumb {
-  @include thumb();
+  appearance: none;
+  height: 8px;
+  width: 20px;
+  background-color: var(--primary);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all ease 0.3s;
+  margin-left: 5px;
+  border: none;
 }
 
 input[type="range"]::-ms-thumb {
-  @include thumb();
+  appearance: none;
+  height: 8px;
+  width: 20px;
+  background-color: var(--primary);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all ease 0.3s;
+  margin-left: 5px;
+  border: none;
 }
 
-@mixin thumbHover() {
+input[type="range"]::-webkit-slider-thumb:hover {
   transform: scaleY(1.2);
   width: 24px;
 }
 
-input[type="range"]::-webkit-slider-thumb:hover {
-  @include thumbHover();
-}
-
 input[type="range"]::-moz-range-thumb:hover {
-  @include thumbHover();
+  transform: scaleY(1.2);
+  width: 24px;
 }
 
 input[type="range"]::-ms-thumb:hover {
-  @include thumbHover();
+  transform: scaleY(1.2);
+  width: 24px;
 }
 
 input[type="number"],
@@ -250,12 +268,14 @@ div.math {
   left: 0;
   height: var(--full-height);
   width: 100vw;
-  background-color: rgba($color: #000000, $alpha: 0.5);
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
+}
 
-  @media screen and (max-width: 600px) {
+@media screen and (max-width: 600px) {
+  .modal-mask {
     align-items: flex-end;
   }
 }
@@ -264,88 +284,93 @@ div.math {
   font-size: 12px;
   color: var(--primary);
   text-decoration: none;
+}
 
-  &:hover {
-    text-decoration: underline;
-  }
+.link:hover {
+  text-decoration: underline;
 }
 
 pre {
   position: relative;
-  
-  &:hover .copy-code-button {
-    pointer-events: all;
-    transform: translateX(0px);
-    opacity: 0.5;
-  }
-
-  .copy-code-button {
-    position: absolute;
-    right: 10px;
-    top: 1em;
-    cursor: pointer;
-    padding: 0px 5px;
-    background-color: var(--black);
-    color: var(--white);
-    border: var(--border-in-light);
-    border-radius: 10px;
-    transform: translateX(10px);
-    pointer-events: none;
-    opacity: 0;
-    transition: all ease 0.3s;
-
-    &:after {
-      content: "copy";
-    }
-
-    &:hover {
-      opacity: 1;
-    }
-  }
 }
 
-pre {
-  .show-hide-button {
-    border-radius: 10px;
-    position: absolute;
-    inset: 0 0 auto 0;
-    width: 100%;
-    margin: auto;
-    height: fit-content;
-    display: inline-flex;
-    justify-content: center;
-    pointer-events: none;
-    button{
-      pointer-events: auto;
-      margin-top: 3em;
-      margin-bottom: 4em;
-      padding: 5px 16px;
-      border: 0;
-      cursor: pointer;
-      border-radius: 14px;
-      text-align: center;
-      color: white;
-      background: #464e4e;
-    } 
-  }
-  
-  .expanded {
-    background-image: none;
-  }
-  .collapsed {
-    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.8), rgba(0, 0, 0, 0.06));
-  }
+pre:hover .copy-code-button {
+  pointer-events: all;
+  transform: translateX(0px);
+  opacity: 0.5;
+}
+
+pre .copy-code-button {
+  position: absolute;
+  right: 10px;
+  top: 1em;
+  cursor: pointer;
+  padding: 0px 5px;
+  background-color: var(--black);
+  color: var(--white);
+  border: var(--border-in-light);
+  border-radius: 10px;
+  transform: translateX(10px);
+  pointer-events: none;
+  opacity: 0;
+  transition: all ease 0.3s;
+}
+
+pre .copy-code-button:after {
+  content: "copy";
+}
+
+pre .copy-code-button:hover {
+  opacity: 1;
+}
+
+pre .show-hide-button {
+  border-radius: 10px;
+  position: absolute;
+  inset: 0 0 auto 0;
+  width: 100%;
+  margin: auto;
+  height: fit-content;
+  display: inline-flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+pre .show-hide-button button {
+  pointer-events: auto;
+  margin-top: 3em;
+  margin-bottom: 4em;
+  padding: 5px 16px;
+  border: 0;
+  cursor: pointer;
+  border-radius: 14px;
+  text-align: center;
+  color: white;
+  background: #464e4e;
+}
+
+pre .expanded {
+  background-image: none;
+}
+
+pre .collapsed {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.8),
+    rgba(0, 0, 0, 0.06)
+  );
 }
 
 .clickable {
   cursor: pointer;
+}
 
-  &:hover {
-    filter: brightness(0.9);
-  }
-  &:focus {
-    filter: brightness(0.95);
-  }
+.clickable:hover {
+  filter: brightness(0.9);
+}
+
+.clickable:focus {
+  filter: brightness(0.95);
 }
 
 .error {
@@ -357,24 +382,24 @@ pre {
   overflow: auto;
   background-color: var(--white);
   color: var(--black);
+}
 
-  pre {
-    overflow: auto;
-  }
+.error pre {
+  overflow: auto;
 }
 
 .password-input-container {
   max-width: 50%;
   display: flex;
   justify-content: flex-end;
+}
 
-  .password-eye {
-    margin-right: 4px;
-  }
+.password-input-container .password-eye {
+  margin-right: 4px;
+}
 
-  .password-input {
-    min-width: 80%;
-  }
+.password-input-container .password-input {
+  min-width: 80%;
 }
 
 .user-avatar {

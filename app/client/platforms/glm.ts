@@ -4,10 +4,10 @@ import {
   useAccessStore,
   useAppConfig,
   useChatStore,
-  ChatMessageTool,
   usePluginStore,
 } from "@/app/store";
-import { stream } from "@/app/utils/chat";
+import { streamWithAISDK } from "../ai-sdk/stream";
+import { createChatModel } from "../ai-sdk/providers";
 import {
   ChatOptions,
   getHeaders,
@@ -21,7 +21,6 @@ import {
   isVisionModel,
   getTimeoutMSByModel,
 } from "@/app/utils";
-import { RequestPayload } from "./openai";
 import { fetch } from "@/app/utils/stream";
 import { preProcessImageContent } from "@/app/utils/chat";
 
@@ -211,60 +210,33 @@ export class ChatGLMApi implements LLMApi {
           .getAsTools(
             useChatStore.getState().currentSession().mask?.plugin || [],
           );
-        return stream(
-          path,
-          requestPayload,
-          getHeaders(),
-          tools as any,
+
+        // Route streaming through the Vercel AI SDK using a per-provider
+        // (OpenAI-compatible) client pointed at the same base URL and auth
+        // headers NextChat already resolves.
+        clearTimeout(requestTimeoutId);
+        const baseURL = path.replace(/\/chat\/completions$/, "");
+        const model = createChatModel({
+          kind: "openai-compatible",
+          name: "glm",
+          model: modelConfig.model,
+          baseURL,
+          headers: getHeaders(),
+        });
+
+        return streamWithAISDK({
+          model,
+          messages,
+          temperature: modelConfig.temperature,
+          topP: modelConfig.top_p,
+          presencePenalty: modelConfig.presence_penalty,
+          frequencyPenalty: modelConfig.frequency_penalty,
+          tools: tools as any[],
           funcs,
           controller,
-          // parseSSE
-          (text: string, runTools: ChatMessageTool[]) => {
-            const json = JSON.parse(text);
-            const choices = json.choices as Array<{
-              delta: {
-                content: string;
-                tool_calls: ChatMessageTool[];
-              };
-            }>;
-            const tool_calls = choices[0]?.delta?.tool_calls;
-            if (tool_calls?.length > 0) {
-              const index = tool_calls[0]?.index;
-              const id = tool_calls[0]?.id;
-              const args = tool_calls[0]?.function?.arguments;
-              if (id) {
-                runTools.push({
-                  id,
-                  type: tool_calls[0]?.type,
-                  function: {
-                    name: tool_calls[0]?.function?.name as string,
-                    arguments: args,
-                  },
-                });
-              } else {
-                // @ts-ignore
-                runTools[index]["function"]["arguments"] += args;
-              }
-            }
-            return choices[0]?.delta?.content;
-          },
-          // processToolMessage
-          (
-            requestPayload: RequestPayload,
-            toolCallMessage: any,
-            toolCallResult: any[],
-          ) => {
-            // @ts-ignore
-            requestPayload?.messages?.splice(
-              // @ts-ignore
-              requestPayload?.messages?.length,
-              0,
-              toolCallMessage,
-              ...toolCallResult,
-            );
-          },
           options,
-        );
+          timeoutMs: getTimeoutMSByModel(options.config.model),
+        });
       } else {
         const res = await fetch(path, chatPayload);
         clearTimeout(requestTimeoutId);

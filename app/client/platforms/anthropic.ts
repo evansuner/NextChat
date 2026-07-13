@@ -5,14 +5,14 @@ import {
   useAppConfig,
   useChatStore,
   usePluginStore,
-  ChatMessageTool,
 } from "@/app/store";
 import { getClientConfig } from "@/app/config/client";
 import { ANTHROPIC_BASE_URL } from "@/app/constant";
 import { getMessageTextContent, isVisionModel } from "@/app/utils";
-import { preProcessImageContent, stream } from "@/app/utils/chat";
+import { preProcessImageContent } from "@/app/utils/chat";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
-import { RequestPayload } from "./openai";
+import { streamWithAISDK } from "../ai-sdk/stream";
+import { createChatModel } from "../ai-sdk/providers";
 import { fetch } from "@/app/utils/stream";
 
 export type MultiBlockContent = {
@@ -197,128 +197,41 @@ export class ClaudeApi implements LLMApi {
     options.onController?.(controller);
 
     if (shouldStream) {
-      let index = -1;
       const [tools, funcs] = usePluginStore
         .getState()
         .getAsTools(
           useChatStore.getState().currentSession().mask?.plugin || [],
         );
-      return stream(
-        path,
-        requestBody,
-        {
+
+      // Route streaming through the Vercel AI SDK using the dedicated Anthropic
+      // client, pointed at the same base URL and auth headers NextChat already
+      // resolves. The SDK builds the native Anthropic message format from the
+      // OpenAI-style messages, so the bespoke prompt transform is no longer
+      // needed for streaming.
+      const baseURL = path.replace(/\/messages$/, "");
+      const model = createChatModel({
+        kind: "anthropic",
+        model: modelConfig.model,
+        baseURL,
+        headers: {
           ...getHeaders(),
           "anthropic-version": accessStore.anthropicApiVersion,
         },
-        // @ts-ignore
-        tools.map((tool) => ({
-          name: tool?.function?.name,
-          description: tool?.function?.description,
-          input_schema: tool?.function?.parameters,
-        })),
+      });
+
+      return streamWithAISDK({
+        model,
+        messages,
+        // Anthropic does not allow both temperature and top_p at the same time.
+        temperature:
+          modelConfig.temperature != null ? modelConfig.temperature : undefined,
+        topP: modelConfig.temperature != null ? undefined : modelConfig.top_p,
+        maxTokens: modelConfig.max_tokens,
+        tools: tools as any[],
         funcs,
         controller,
-        // parseSSE
-        (text: string, runTools: ChatMessageTool[]) => {
-          // console.log("parseSSE", text, runTools);
-          let chunkJson:
-            | undefined
-            | {
-                type:
-                  | "content_block_delta"
-                  | "content_block_stop"
-                  | "message_delta"
-                  | "message_stop";
-                content_block?: {
-                  type: "tool_use";
-                  id: string;
-                  name: string;
-                };
-                delta?: {
-                  type: "text_delta" | "input_json_delta";
-                  text?: string;
-                  partial_json?: string;
-                  stop_reason?: string;
-                };
-                index: number;
-              };
-          chunkJson = JSON.parse(text);
-
-          // Handle refusal stop reason in message_delta
-          if (chunkJson?.delta?.stop_reason === "refusal") {
-            // Return a message to display to the user
-            const refusalMessage =
-              "\n\n[Assistant refused to respond. Please modify your request and try again.]";
-            options.onError?.(
-              new Error("Content policy violation: " + refusalMessage),
-            );
-            return refusalMessage;
-          }
-
-          if (chunkJson?.content_block?.type == "tool_use") {
-            index += 1;
-            const id = chunkJson?.content_block.id;
-            const name = chunkJson?.content_block.name;
-            runTools.push({
-              id,
-              type: "function",
-              function: {
-                name,
-                arguments: "",
-              },
-            });
-          }
-          if (
-            chunkJson?.delta?.type == "input_json_delta" &&
-            chunkJson?.delta?.partial_json
-          ) {
-            // @ts-ignore
-            runTools[index]["function"]["arguments"] +=
-              chunkJson?.delta?.partial_json;
-          }
-          return chunkJson?.delta?.text;
-        },
-        // processToolMessage, include tool_calls message and tool call results
-        (
-          requestPayload: RequestPayload,
-          toolCallMessage: any,
-          toolCallResult: any[],
-        ) => {
-          // reset index value
-          index = -1;
-          // @ts-ignore
-          requestPayload?.messages?.splice(
-            // @ts-ignore
-            requestPayload?.messages?.length,
-            0,
-            {
-              role: "assistant",
-              content: toolCallMessage.tool_calls.map(
-                (tool: ChatMessageTool) => ({
-                  type: "tool_use",
-                  id: tool.id,
-                  name: tool?.function?.name,
-                  input: tool?.function?.arguments
-                    ? JSON.parse(tool?.function?.arguments)
-                    : {},
-                }),
-              ),
-            },
-            // @ts-ignore
-            ...toolCallResult.map((result) => ({
-              role: "user",
-              content: [
-                {
-                  type: "tool_result",
-                  tool_use_id: result.tool_call_id,
-                  content: result.content,
-                },
-              ],
-            })),
-          );
-        },
         options,
-      );
+      });
     } else {
       const payload = {
         method: "POST",

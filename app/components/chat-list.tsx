@@ -1,6 +1,5 @@
 import DeleteIcon from "../icons/delete.svg";
 
-import styles from "./home.module.scss";
 import {
   DragDropContext,
   Droppable,
@@ -46,11 +45,16 @@ export function ChatItem(props: {
     <Draggable draggableId={`${props.id}`} index={props.index}>
       {(provided) => (
         <div
-          className={clsx(styles["chat-item"], {
-            [styles["chat-item-selected"]]:
-              props.selected &&
-              (currentPath === Path.Chat || currentPath === Path.Home),
-          })}
+          className={clsx(
+            "group relative mb-[10px] cursor-pointer select-none rounded-[10px] border-2 bg-white shadow-card [content-visibility:auto] hover:bg-hover",
+            props.narrow
+              ? "flex min-h-[50px] items-center justify-center overflow-hidden p-0 [transition:all_ease_0.3s]"
+              : "px-[14px] py-[10px] [transition:background-color_0.3s_ease]",
+            props.selected &&
+              (currentPath === Path.Chat || currentPath === Path.Home)
+              ? "border-primary"
+              : "border-transparent",
+          )}
           onClick={props.onClick}
           ref={(ele) => {
             draggableRef.current = ele;
@@ -63,31 +67,40 @@ export function ChatItem(props: {
           )}`}
         >
           {props.narrow ? (
-            <div className={styles["chat-item-narrow"]}>
-              <div className={clsx(styles["chat-item-avatar"], "no-dark")}>
+            <div className="flex flex-col justify-center p-1 leading-[0] [font-weight:lighter] text-black [transform:translateX(0)] [transition:all_ease_0.3s] group-hover:[transform:scale(0.7)_translateX(-50%)]">
+              <div
+                className={clsx(
+                  "absolute flex justify-center opacity-20 [transform:scale(4)]",
+                  "no-dark",
+                )}
+              >
                 <MaskAvatar
                   avatar={props.mask.avatar}
                   model={props.mask.modelConfig.model}
                 />
               </div>
-              <div className={styles["chat-item-narrow-count"]}>
+              <div className="text-center text-[24px] [font-weight:bolder] text-primary opacity-60">
                 {props.count}
               </div>
             </div>
           ) : (
             <>
-              <div className={styles["chat-item-title"]}>{props.title}</div>
-              <div className={styles["chat-item-info"]}>
-                <div className={styles["chat-item-count"]}>
+              <div className="block w-[calc(100%-15px)] overflow-hidden text-ellipsis whitespace-nowrap text-[14px] [font-weight:bolder] [animation:slide-in_ease_0.3s]">
+                {props.title}
+              </div>
+              <div className="mt-2 flex justify-between text-[12px] text-[rgb(166,166,166)] [animation:slide-in_ease_0.3s]">
+                <div className="overflow-hidden text-ellipsis whitespace-nowrap">
                   {Locale.ChatItem.ChatItemCount(props.count)}
                 </div>
-                <div className={styles["chat-item-date"]}>{props.time}</div>
+                <div className="overflow-hidden text-ellipsis whitespace-nowrap">
+                  {props.time}
+                </div>
               </div>
             </>
           )}
 
           <div
-            className={styles["chat-item-delete"]}
+            className="absolute top-0 right-0 cursor-pointer opacity-0 [transition:all_ease_0.3s] group-hover:opacity-50 group-hover:[transform:translateX(-4px)] hover:opacity-100!"
             onClickCapture={(e) => {
               props.onDelete?.();
               e.preventDefault();
@@ -132,7 +145,6 @@ export function ChatList(props: { narrow?: boolean }) {
       <Droppable droppableId="chat-list">
         {(provided) => (
           <div
-            className={styles["chat-list"]}
             ref={provided.innerRef}
             {...provided.droppableProps}
           >

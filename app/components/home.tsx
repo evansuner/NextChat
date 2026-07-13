@@ -3,7 +3,6 @@
 require("../polyfill");
 
 import { useEffect, useState } from "react";
-import styles from "./home.module.scss";
 
 import BotIcon from "../icons/bot.svg";
 import LoadingIcon from "../icons/three-dots.svg";
@@ -31,10 +30,18 @@ import { useAccessStore } from "../store";
 import clsx from "clsx";
 import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
 
+const containerClassName =
+  "bg-white [border:var(--border-in-light)] rounded-[20px] shadow-panel text-black min-w-[600px] min-h-[370px] max-w-[1200px] flex overflow-hidden box-border w-[var(--window-width)] h-[var(--window-height)] max-[600px]:min-h-[unset] max-[600px]:min-w-[unset] max-[600px]:max-h-[unset] max-[600px]:[border:0] max-[600px]:rounded-none";
+
 export function Loading(props: { noLogo?: boolean }) {
   return (
-    <div className={styles.container}>
-      <div className={clsx("no-dark", styles["loading-content"])}>
+    <div className={containerClassName}>
+      <div
+        className={clsx(
+          "no-dark",
+          "flex flex-col justify-center items-center h-full w-full",
+        )}
+      >
         {!props.noLogo && <BotIcon />}
         <LoadingIcon />
       </div>
@@ -153,7 +160,10 @@ const loadAsyncGoogleFont = () => {
 
 export function WindowContent(props: { children: React.ReactNode }) {
   return (
-    <div className={styles["window-content"]} id={SlotID.AppBody}>
+    <div
+      className="w-(--window-content-width) h-full flex flex-col"
+      id={SlotID.AppBody}
+    >
       {props?.children}
     </div>
   );
@@ -191,7 +201,7 @@ function Screen() {
       <>
         <SideBar
           className={clsx({
-            [styles["sidebar-show"]]: isHome,
+            "max-[600px]:left-0": isHome,
           })}
         />
         <WindowContent>
@@ -212,9 +222,10 @@ function Screen() {
 
   return (
     <div
-      className={clsx(styles.container, {
-        [styles["tight-container"]]: shouldTightBorder,
-        [styles["rtl-screen"]]: false,
+      className={clsx(containerClassName, {
+        "min-[600px]:[--window-width:100vw] min-[600px]:[--window-height:var(--full-height)] min-[600px]:[--window-content-width:calc(100%-var(--sidebar-width))] min-[600px]:max-w-[100vw] min-[600px]:max-h-(--full-height) min-[600px]:rounded-none min-[600px]:[border:0]":
+          shouldTightBorder,
+        "[direction:rtl]": false,
       })}
     >
       {renderContent()}

@@ -2,7 +2,6 @@ import VoiceIcon from "@/app/icons/voice.svg";
 import VoiceOffIcon from "@/app/icons/voice-off.svg";
 import PowerIcon from "@/app/icons/power.svg";
 
-import styles from "./realtime-chat.module.scss";
 import clsx from "clsx";
 
 import { useState, useRef, useEffect } from "react";
@@ -325,16 +324,19 @@ export function RealtimeChat({
   };
 
   return (
-    <div className={styles["realtime-chat"]}>
+    <div className="relative box-border flex h-full w-full flex-col items-center justify-center p-5">
       <div
-        className={clsx(styles["circle-mic"], {
-          [styles["pulse"]]: isRecording,
-        })}
+        className={clsx(
+          "flex h-37.5 w-37.5 items-center justify-center rounded-full bg-[linear-gradient(to_bottom_right,#a0d8ef,#f0f8ff)]",
+          {
+            "animate-[realtime-pulse_1.5s_infinite]": isRecording,
+          },
+        )}
       >
         <VoicePrint frequencies={frequencies} isActive={isRecording} />
       </div>
 
-      <div className={styles["bottom-icons"]}>
+      <div className="absolute bottom-5 box-border flex w-full items-center justify-between px-5">
         <div>
           <IconButton
             icon={isRecording ? <VoiceIcon /> : <VoiceOffIcon />}
@@ -344,7 +346,7 @@ export function RealtimeChat({
             bordered
           />
         </div>
-        <div className={styles["icon-center"]}>{status}</div>
+        <div className="text-2xl">{status}</div>
         <div>
           <IconButton
             icon={<PowerIcon />}

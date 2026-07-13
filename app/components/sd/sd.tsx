@@ -1,7 +1,3 @@
-import chatStyles from "@/app/components/chat.module.scss";
-import styles from "@/app/components/sd/sd.module.scss";
-import homeStyles from "@/app/components/home.module.scss";
-
 import { IconButton } from "@/app/components/button";
 import ReturnIcon from "@/app/icons/return.svg";
 import Locale from "@/app/locales";
@@ -62,7 +58,11 @@ function getSdTaskStatus(item: any) {
       s = item.status.toUpperCase();
   }
   return (
-    <p className={styles["line-1"]} title={item.error} style={{ color: color }}>
+    <p
+      className="overflow-hidden whitespace-nowrap text-ellipsis"
+      title={item.error}
+      style={{ color: color }}
+    >
       <span>
         {Locale.Sd.Status.Name}: {s}
       </span>
@@ -105,9 +105,9 @@ export function Sd() {
 
   return (
     <>
-      <SideBar className={clsx({ [homeStyles["sidebar-show"]]: isSd })} />
+      <SideBar className={clsx({ "max-[600px]:left-0": isSd })} />
       <WindowContent>
-        <div className={chatStyles.chat} key={"1"}>
+        <div className="flex flex-col relative h-full" key={"1"}>
           <div className="window-header" data-tauri-drag-region>
             {isMobileScreen && (
               <div className="window-actions">
@@ -124,7 +124,7 @@ export function Sd() {
             <div
               className={clsx(
                 "window-header-title",
-                chatStyles["chat-body-title"],
+                "max-[600px]:text-center",
               )}
             >
               <div className={`window-header-main-title`}>Stability AI</div>
@@ -151,19 +151,22 @@ export function Sd() {
               {isMobileScreen && <SDIcon width={50} height={50} />}
             </div>
           </div>
-          <div className={chatStyles["chat-body"]} ref={scrollRef}>
-            <div className={styles["sd-img-list"]}>
+          <div
+            className="flex-1 overflow-auto overflow-x-hidden p-5 pb-10 relative overscroll-none"
+            ref={scrollRef}
+          >
+            <div className="flex flex-wrap justify-between">
               {sdImages.length > 0 ? (
                 sdImages.map((item: any) => {
                   return (
                     <div
                       key={item.id}
                       style={{ display: "flex" }}
-                      className={styles["sd-img-item"]}
+                      className="w-[48%] max-[600px]:w-full [&:not(:last-child)]:mb-5"
                     >
                       {item.status === "success" ? (
                         <img
-                          className={styles["img"]}
+                          className="w-[130px] h-[130px] rounded-[10px] overflow-hidden cursor-pointer transition-all duration-300 hover:opacity-70"
                           src={item.img_data}
                           alt={item.id}
                           onClick={(e) =>
@@ -180,19 +183,19 @@ export function Sd() {
                           }
                         />
                       ) : item.status === "error" ? (
-                        <div className={styles["pre-img"]}>
+                        <div className="flex w-[130px] justify-center items-center bg-second rounded-[10px]">
                           <ErrorIcon />
                         </div>
                       ) : (
-                        <div className={styles["pre-img"]}>
+                        <div className="flex w-[130px] justify-center items-center bg-second rounded-[10px]">
                           <LoadingIcon />
                         </div>
                       )}
                       <div
                         style={{ marginLeft: "10px" }}
-                        className={styles["sd-img-item-info"]}
+                        className="flex-1 w-full overflow-hidden select-text [&_p]:m-1.5 [&_p]:text-xs"
                       >
-                        <p className={styles["line-1"]}>
+                        <p className="overflow-hidden whitespace-nowrap text-ellipsis">
                           {Locale.SdPanel.Prompt}:{" "}
                           <span
                             className="clickable"
@@ -216,8 +219,8 @@ export function Sd() {
                         </p>
                         {getSdTaskStatus(item)}
                         <p>{item.created_at}</p>
-                        <div className={chatStyles["chat-message-actions"]}>
-                          <div className={chatStyles["chat-input-actions"]}>
+                        <div>
+                          <div className="flex flex-wrap justify-between gap-1.25">
                             <ChatAction
                               text={Locale.Sd.Actions.Params}
                               icon={<PromptIcon />}

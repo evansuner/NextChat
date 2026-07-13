@@ -1,0 +1,18 @@
+@layer theme, base, components, utilities;
+
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+
+@theme {
+  --color-white: var(--white);
+  --color-black: var(--black);
+  --color-gray: var(--gray);
+  --color-primary: var(--primary);
+  --color-second: var(--second);
+  --color-hover: var(--hover-color);
+  --color-bar: var(--bar-color);
+  --color-theme: var(--theme-color);
+
+  --shadow-card: var(--card-shadow);
+  --shadow-panel: var(--shadow);
+}

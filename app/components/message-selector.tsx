@@ -6,7 +6,6 @@ import { Avatar } from "./emoji";
 import { MaskAvatar } from "./mask";
 import Locale from "../locales";
 
-import styles from "./message-selector.module.scss";
 import { getMessageTextContent } from "../utils";
 import clsx from "clsx";
 
@@ -144,12 +143,12 @@ export function MessageSelector(props: {
   }, [startIndex, endIndex]);
 
   return (
-    <div className={styles["message-selector"]}>
-      <div className={styles["message-filter"]}>
+    <div>
+      <div className="flex max-[600px]:flex-col">
         <input
           type="text"
           placeholder={Locale.Select.Search}
-          className={clsx(styles["filter-item"], styles["search-bar"])}
+          className="mr-2.5 max-w-none grow max-[600px]:mr-0"
           value={searchInput}
           onInput={(e) => {
             setSearchInput(e.currentTarget.value);
@@ -157,17 +156,15 @@ export function MessageSelector(props: {
           }}
         ></input>
 
-        <div className={styles["actions"]}>
+        <div className="flex [&_button:not(:last-child)]:mr-2.5 max-[600px]:mt-5 max-[600px]:[&_button]:grow">
           <IconButton
             text={Locale.Select.All}
             bordered
-            className={styles["filter-item"]}
             onClick={selectAll}
           />
           <IconButton
             text={Locale.Select.Latest}
             bordered
-            className={styles["filter-item"]}
             onClick={() =>
               props.updateSelection((selection) => {
                 selection.clear();
@@ -180,7 +177,6 @@ export function MessageSelector(props: {
           <IconButton
             text={Locale.Select.Clear}
             bordered
-            className={styles["filter-item"]}
             onClick={() =>
               props.updateSelection((selection) => selection.clear())
             }
@@ -188,7 +184,7 @@ export function MessageSelector(props: {
         </div>
       </div>
 
-      <div className={styles["messages"]}>
+      <div className="mt-5 overflow-hidden rounded-[10px] [border:var(--border-in-light)]">
         {messages.map((m, i) => {
           if (!isInSearchResult(m.id!)) return null;
           const id = m.id ?? i;
@@ -196,9 +192,12 @@ export function MessageSelector(props: {
 
           return (
             <div
-              className={clsx(styles["message"], {
-                [styles["message-selected"]]: props.selection.has(m.id!),
-              })}
+              className={clsx(
+                "flex cursor-pointer items-center px-2.5 py-2 [&:not(:last-child)]:[border-bottom:var(--border-in-light)]",
+                {
+                  "bg-second": props.selection.has(m.id!),
+                },
+              )}
               key={i}
               onClick={() => {
                 props.updateSelection((selection) => {
@@ -207,7 +206,7 @@ export function MessageSelector(props: {
                 onClickIndex(i);
               }}
             >
-              <div className={styles["avatar"]}>
+              <div className="mr-2.5">
                 {m.role === "user" ? (
                   <Avatar avatar={config.avatar}></Avatar>
                 ) : (
@@ -217,16 +216,16 @@ export function MessageSelector(props: {
                   />
                 )}
               </div>
-              <div className={styles["body"]}>
-                <div className={styles["date"]}>
+              <div className="max-w-[calc(100%-80px)] flex-1">
+                <div className="text-xs leading-[1.2] opacity-50">
                   {new Date(m.date).toLocaleString()}
                 </div>
-                <div className={clsx(styles["content"], "one-line")}>
+                <div className={clsx("text-xs", "one-line")}>
                   {getMessageTextContent(m)}
                 </div>
               </div>
 
-              <div className={styles["checkbox"]}>
+              <div className="flex flex-1 justify-end">
                 <input type="checkbox" checked={isSelected} readOnly></input>
               </div>
             </div>

@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { Path, SlotID } from "../constant";
 import { IconButton } from "./button";
 import { EmojiAvatar } from "./emoji";
-import styles from "./new-chat.module.scss";
 
 import LeftIcon from "../icons/left.svg";
 import LightningIcon from "../icons/lightning.svg";
@@ -20,12 +19,15 @@ import clsx from "clsx";
 
 function MaskItem(props: { mask: Mask; onClick?: () => void }) {
   return (
-    <div className={styles["mask"]} onClick={props.onClick}>
+    <div
+      className="flex cursor-pointer items-center mr-2.5 max-w-[8em] rounded-[10px] bg-white px-3.5 py-2.5 shadow-card [border:var(--border-in-light)] transform-[scale(1)] [transition:all_ease_0.3s] hover:z-999 hover:border-primary hover:transform-[translateY(-5px)_scale(1.1)]"
+      onClick={props.onClick}
+    >
       <MaskAvatar
         avatar={props.mask.avatar}
         model={props.mask.modelConfig.model}
       />
-      <div className={clsx(styles["mask-name"], "one-line")}>
+      <div className={clsx("ml-2.5 text-sm", "one-line")}>
         {props.mask.name}
       </div>
     </div>
@@ -114,8 +116,8 @@ export function NewChat() {
   }, [groups]);
 
   return (
-    <div className={styles["new-chat"]}>
-      <div className={styles["mask-header"]}>
+    <div className="flex h-full w-full flex-col items-center justify-center">
+      <div className="flex w-full justify-between box-border p-2.5 animate-[slide-in-from-top_ease_0.3s]">
         <IconButton
           icon={<LeftIcon />}
           text={Locale.NewChat.Return}
@@ -135,22 +137,26 @@ export function NewChat() {
           ></IconButton>
         )}
       </div>
-      <div className={styles["mask-cards"]}>
-        <div className={styles["mask-card"]}>
+      <div className="flex mt-[5vh] mb-5 animate-[slide-in_ease_0.3s]">
+        <div className="rounded-[14px] bg-white px-2.5 py-5 shadow-card [border:var(--border-in-light)] transform-[scale(1)] first:transform-[rotate(-15deg)_translateY(5px)] last:transform-[rotate(15deg)_translateY(5px)]">
           <EmojiAvatar avatar="1f606" size={24} />
         </div>
-        <div className={styles["mask-card"]}>
+        <div className="rounded-[14px] bg-white px-2.5 py-5 shadow-card [border:var(--border-in-light)] transform-[scale(1)] first:transform-[rotate(-15deg)_translateY(5px)] last:transform-[rotate(15deg)_translateY(5px)]">
           <EmojiAvatar avatar="1f916" size={24} />
         </div>
-        <div className={styles["mask-card"]}>
+        <div className="rounded-[14px] bg-white px-2.5 py-5 shadow-card [border:var(--border-in-light)] transform-[scale(1)] first:transform-[rotate(-15deg)_translateY(5px)] last:transform-[rotate(15deg)_translateY(5px)]">
           <EmojiAvatar avatar="1f479" size={24} />
         </div>
       </div>
 
-      <div className={styles["title"]}>{Locale.NewChat.Title}</div>
-      <div className={styles["sub-title"]}>{Locale.NewChat.SubTitle}</div>
+      <div className="text-[32px] font-[bolder] mb-[1vh] animate-[slide-in_ease_0.35s]">
+        {Locale.NewChat.Title}
+      </div>
+      <div className="animate-[slide-in_ease_0.4s]">
+        {Locale.NewChat.SubTitle}
+      </div>
 
-      <div className={styles["actions"]}>
+      <div className="flex justify-center mt-[5vh] mb-[2vh] text-xs animate-[slide-in_ease_0.45s]">
         <IconButton
           text={Locale.NewChat.More}
           onClick={() => navigate(Path.Masks)}
@@ -165,13 +171,16 @@ export function NewChat() {
           icon={<LightningIcon />}
           type="primary"
           shadow
-          className={styles["skip"]}
+          className="ml-2.5"
         />
       </div>
 
-      <div className={styles["masks"]} ref={maskRef}>
+      <div
+        className="grow w-full items-center overflow-auto pt-5 animate-[slide-in_ease_0.5s] [-webkit-mask-image:linear-gradient(to_bottom,rgba(0,0,0,0),rgba(0,0,0,1),rgba(0,0,0,0))] mask-[linear-gradient(to_bottom,rgba(0,0,0,0),rgba(0,0,0,1),rgba(0,0,0,0))]"
+        ref={maskRef}
+      >
         {groups.map((masks, i) => (
-          <div key={i} className={styles["mask-row"]}>
+          <div key={i} className="flex mb-2.5 even:ml-12.5">
             {masks.map((mask, index) => (
               <MaskItem
                 key={index}

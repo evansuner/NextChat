@@ -1,7 +1,5 @@
 import React, { Fragment, useEffect, useMemo, useRef, useState } from "react";
 
-import styles from "./home.module.scss";
-
 import { IconButton } from "./button";
 import SettingsIcon from "../icons/settings.svg";
 import GithubIcon from "../icons/github.svg";
@@ -150,9 +148,11 @@ export function SideBarContainer(props: {
   const { children, className, onDragStart, shouldNarrow } = props;
   return (
     <div
-      className={clsx(styles.sidebar, className, {
-        [styles["narrow-sidebar"]]: shouldNarrow,
-      })}
+      className={clsx(
+        "group/sidebar relative top-0 box-border flex w-[var(--sidebar-width)] flex-col bg-second p-5 [box-shadow:inset_-2px_0px_2px_0px_rgb(0,0,0,0.05)] [transition:width_ease_0.05s] max-[600px]:absolute max-[600px]:left-[-100%] max-[600px]:z-[1000] max-[600px]:h-[var(--full-height)] max-[600px]:shadow-none max-[600px]:[transition:all_ease_0.3s]",
+        className,
+      )}
+      data-narrow={shouldNarrow ? "true" : undefined}
       style={{
         // #3016 disable transition on ios mobile screen
         transition: isMobileScreen && isIOSMobile ? "none" : undefined,
@@ -160,7 +160,7 @@ export function SideBarContainer(props: {
     >
       {children}
       <div
-        className={styles["sidebar-drag"]}
+        className="absolute top-0 right-0 flex h-full w-[14px] cursor-ew-resize items-center bg-[rgba(0,0,0,0)] [transition:all_ease_0.3s] [&_svg]:ml-[-2px] [&_svg]:opacity-0 group-hover/sidebar:bg-[rgba(0,0,0,0.01)] group-hover/sidebar:[&_svg]:opacity-20 group-active/sidebar:bg-[rgba(0,0,0,0.01)] group-active/sidebar:[&_svg]:opacity-20"
         onPointerDown={(e) => onDragStart(e as any)}
       >
         <DragIcon />
@@ -180,18 +180,31 @@ export function SideBarHeader(props: {
   return (
     <Fragment>
       <div
-        className={clsx(styles["sidebar-header"], {
-          [styles["sidebar-header-narrow"]]: shouldNarrow,
-        })}
+        className={clsx(
+          "relative flex items-center pt-5 pb-5",
+          shouldNarrow ? "justify-center" : "justify-between",
+        )}
         data-tauri-drag-region
       >
-        <div className={styles["sidebar-title-container"]}>
-          <div className={styles["sidebar-title"]} data-tauri-drag-region>
+        <div className="inline-flex flex-col">
+          <div
+            className="text-[20px] font-bold [animation:slide-in_ease_0.3s] group-data-[narrow=true]/sidebar:hidden"
+            data-tauri-drag-region
+          >
             {title}
           </div>
-          <div className={styles["sidebar-sub-title"]}>{subTitle}</div>
+          <div className="text-[12px] font-normal [animation:slide-in_ease_0.3s] group-data-[narrow=true]/sidebar:hidden">
+            {subTitle}
+          </div>
         </div>
-        <div className={clsx(styles["sidebar-logo"], "no-dark")}>{logo}</div>
+        <div
+          className={clsx(
+            "inline-flex group-data-[narrow=true]/sidebar:relative group-data-[narrow=true]/sidebar:flex group-data-[narrow=true]/sidebar:justify-center",
+            "no-dark",
+          )}
+        >
+          {logo}
+        </div>
       </div>
       {children}
     </Fragment>
@@ -204,7 +217,10 @@ export function SideBarBody(props: {
 }) {
   const { onClick, children } = props;
   return (
-    <div className={styles["sidebar-body"]} onClick={onClick}>
+    <div
+      className="flex-1 overflow-auto overflow-x-hidden"
+      onClick={onClick}
+    >
       {children}
     </div>
   );
@@ -217,9 +233,13 @@ export function SideBarTail(props: {
   const { primaryAction, secondaryAction } = props;
 
   return (
-    <div className={styles["sidebar-tail"]}>
-      <div className={styles["sidebar-actions"]}>{primaryAction}</div>
-      <div className={styles["sidebar-actions"]}>{secondaryAction}</div>
+    <div className="flex justify-between pt-5 group-data-[narrow=true]/sidebar:flex-col-reverse group-data-[narrow=true]/sidebar:items-center">
+      <div className="inline-flex group-data-[narrow=true]/sidebar:flex-col-reverse group-data-[narrow=true]/sidebar:items-center">
+        {primaryAction}
+      </div>
+      <div className="inline-flex group-data-[narrow=true]/sidebar:flex-col-reverse group-data-[narrow=true]/sidebar:items-center">
+        {secondaryAction}
+      </div>
     </div>
   );
 }
@@ -255,12 +275,12 @@ export function SideBar(props: { className?: string }) {
         logo={<ChatGptIcon />}
         shouldNarrow={shouldNarrow}
       >
-        <div className={styles["sidebar-header-bar"]}>
+        <div className="mb-5 flex group-data-[narrow=true]/sidebar:flex-col">
           {mcpEnabled && (
             <IconButton
               icon={<McpIcon />}
               text={shouldNarrow ? undefined : Locale.Mcp.Name}
-              className={styles["sidebar-bar-button"]}
+              className="grow [&:not(:last-child)]:mr-[10px] group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mr-0 group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mb-[10px]"
               onClick={() => {
                 navigate(Path.McpMarket, { state: { fromHome: true } });
               }}
@@ -270,7 +290,7 @@ export function SideBar(props: { className?: string }) {
           <IconButton
             icon={<DiscoveryIcon />}
             text={shouldNarrow ? undefined : Locale.Discovery.Name}
-            className={styles["sidebar-bar-button"]}
+            className="grow [&:not(:last-child)]:mr-[10px] group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mr-0 group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mb-[10px]"
             onClick={() => setShowDiscoverySelector(true)}
             shadow
           />
@@ -304,7 +324,12 @@ export function SideBar(props: { className?: string }) {
       <SideBarTail
         primaryAction={
           <>
-            <div className={clsx(styles["sidebar-action"], styles.mobile)}>
+            <div
+              className={clsx(
+                "[&:not(:last-child)]:mr-[15px] group-data-[narrow=true]/sidebar:mr-0 group-data-[narrow=true]/sidebar:mt-[15px]",
+                "hidden max-[600px]:block",
+              )}
+            >
               <IconButton
                 icon={<DeleteIcon />}
                 onClick={async () => {
@@ -314,7 +339,7 @@ export function SideBar(props: { className?: string }) {
                 }}
               />
             </div>
-            <div className={styles["sidebar-action"]}>
+            <div className="[&:not(:last-child)]:mr-[15px] group-data-[narrow=true]/sidebar:mr-0 group-data-[narrow=true]/sidebar:mt-[15px]">
               <Link to={Path.Settings}>
                 <IconButton
                   aria={Locale.Settings.Title}

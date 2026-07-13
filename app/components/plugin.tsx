@@ -5,9 +5,6 @@ import { PLUGINS_REPO_URL } from "../constant";
 import { IconButton } from "./button";
 import { ErrorBoundary } from "./error";
 
-import styles from "./mask.module.scss";
-import pluginStyles from "./plugin.module.scss";
-
 import EditIcon from "../icons/edit.svg";
 import AddIcon from "../icons/add.svg";
 import CloseIcon from "../icons/close.svg";
@@ -28,7 +25,6 @@ import {
 import Locale from "../locales";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
-import clsx from "clsx";
 
 export function PluginPage() {
   const navigate = useNavigate();
@@ -118,7 +114,7 @@ export function PluginPage() {
 
   return (
     <ErrorBoundary>
-      <div className={styles["mask-page"]}>
+      <div className="flex h-full flex-col">
         <div className="window-header">
           <div className="window-header-title">
             <div className="window-header-main-title">
@@ -140,18 +136,18 @@ export function PluginPage() {
           </div>
         </div>
 
-        <div className={styles["mask-page-body"]}>
-          <div className={styles["mask-filter"]}>
+        <div className="p-5 overflow-y-auto">
+          <div className="flex w-full max-w-full mb-5 h-10 [animation:slide-in_ease_0.3s]">
             <input
               type="text"
-              className={styles["search-bar"]}
+              className="grow max-w-full min-w-0"
               placeholder={Locale.Plugin.Page.Search}
               autoFocus
               onInput={(e) => onSearch(e.currentTarget.value)}
             />
 
             <IconButton
-              className={styles["mask-create"]}
+              className="h-full ml-2.5 box-border min-w-20"
               icon={<AddIcon />}
               text={Locale.Plugin.Page.Create}
               bordered
@@ -184,21 +180,24 @@ export function PluginPage() {
               </div>
             )}
             {plugins.map((m) => (
-              <div className={styles["mask-item"]} key={m.id}>
-                <div className={styles["mask-header"]}>
-                  <div className={styles["mask-icon"]}></div>
-                  <div className={styles["mask-title"]}>
-                    <div className={styles["mask-name"]}>
+              <div
+                className="flex justify-between p-5 [border:var(--border-in-light)] [animation:slide-in_ease_0.3s] [&:not(:last-child)]:border-b-0 [&:first-child]:rounded-t-[10px] [&:last-child]:rounded-b-[10px] max-[600px]:flex-col max-[600px]:pb-2.5 max-[600px]:rounded-[10px] max-[600px]:mb-5 max-[600px]:shadow-card max-[600px]:[&:not(:last-child)]:border-b-[var(--border-in-light)]"
+                key={m.id}
+              >
+                <div className="flex items-center">
+                  <div className="flex items-center justify-center mr-2.5"></div>
+                  <div>
+                    <div className="text-sm font-bold">
                       {m.title}@<small>{m.version}</small>
                     </div>
-                    <div className={clsx(styles["mask-info"], "one-line")}>
+                    <div className="text-xs one-line">
                       {Locale.Plugin.Item.Info(
                         FunctionToolService.add(m).length,
                       )}
                     </div>
                   </div>
                 </div>
-                <div className={styles["mask-actions"]}>
+                <div className="flex flex-nowrap [transition:all_ease_0.3s] max-[600px]:w-full max-[600px]:justify-between max-[600px]:pt-2.5">
                   <IconButton
                     icon={<EditIcon />}
                     text={Locale.Plugin.Item.Edit}
@@ -310,7 +309,7 @@ export function PluginPage() {
             </List>
             <List>
               <ListItem title={Locale.Plugin.EditModal.Content}>
-                <div className={pluginStyles["plugin-schema"]}>
+                <div className="flex justify-end flex-row [&_input]:mr-5 max-[600px]:flex-col max-[600px]:gap-1.25 max-[600px]:[&_input]:mr-0 max-[600px]:[&_button]:p-2.5">
                   <input
                     type="text"
                     style={{ minWidth: 200 }}
@@ -327,10 +326,7 @@ export function PluginPage() {
               <ListItem
                 subTitle={
                   <div
-                    className={clsx(
-                      "markdown-body",
-                      pluginStyles["plugin-content"],
-                    )}
+                    className="markdown-body text-sm font-[inherit] [&_pre_code]:max-h-60 [&_pre_code]:overflow-y-auto [&_pre_code]:whitespace-pre-wrap [&_pre_code]:min-w-[280px]"
                     dir="auto"
                   >
                     <pre>

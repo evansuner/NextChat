@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ErrorBoundary } from "./error";
-import styles from "./mask.module.scss";
 import { useNavigate } from "react-router-dom";
 import { IconButton } from "./button";
 import CloseIcon from "../icons/close.svg";
@@ -87,7 +86,7 @@ export function SearchChatPage() {
 
   return (
     <ErrorBoundary>
-      <div className={styles["mask-page"]}>
+      <div className="flex h-full flex-col">
         {/* header */}
         <div className="window-header">
           <div className="window-header-title">
@@ -110,12 +109,12 @@ export function SearchChatPage() {
           </div>
         </div>
 
-        <div className={styles["mask-page-body"]}>
-          <div className={styles["mask-filter"]}>
+        <div className="overflow-y-auto p-5">
+          <div className="mb-5 flex h-10 w-full max-w-full [animation:slide-in_ease_0.3s]">
             {/**搜索输入框 */}
             <input
               type="text"
-              className={styles["search-bar"]}
+              className="min-w-0 max-w-full grow"
               placeholder={Locale.SearchChat.Page.Search}
               autoFocus
               ref={searchInputRef}
@@ -135,7 +134,7 @@ export function SearchChatPage() {
           <div>
             {searchResults.map((item) => (
               <div
-                className={styles["mask-item"]}
+                className="flex justify-between p-5 [border:var(--border-in-light)] [animation:slide-in_ease_0.3s] [&:not(:last-child)]:border-b-0 first:rounded-t-[10px] last:rounded-b-[10px] max-[600px]:mb-5 max-[600px]:flex-col max-[600px]:rounded-[10px] max-[600px]:pb-2.5 max-[600px]:[box-shadow:var(--card-shadow)] max-[600px]:[&:not(:last-child)]:[border-bottom:var(--border-in-light)]!"
                 key={item.id}
                 onClick={() => {
                   navigate(Path.Chat);
@@ -144,14 +143,14 @@ export function SearchChatPage() {
                 style={{ cursor: "pointer" }}
               >
                 {/** 搜索匹配的文本 */}
-                <div className={styles["mask-header"]}>
-                  <div className={styles["mask-title"]}>
-                    <div className={styles["mask-name"]}>{item.name}</div>
+                <div className="flex items-center">
+                  <div>
+                    <div className="text-sm font-bold">{item.name}</div>
                     {item.content.slice(0, 70)}
                   </div>
                 </div>
                 {/** 操作按钮 */}
-                <div className={styles["mask-actions"]}>
+                <div className="flex flex-nowrap [transition:all_ease_0.3s] max-[600px]:w-full max-[600px]:justify-between max-[600px]:pt-2.5">
                   <IconButton
                     icon={<EyeIcon />}
                     text={Locale.SearchChat.Item.View}
