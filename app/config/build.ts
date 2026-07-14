@@ -8,8 +8,7 @@ export const getBuildConfig = () => {
   }
 
   const buildMode = process.env.BUILD_MODE ?? "standalone";
-  const isApp = !!process.env.BUILD_APP;
-  const version = "v" + '1.1.0'
+  const version = "v" + "1.1.0";
 
   const commitInfo = (() => {
     try {
@@ -37,7 +36,6 @@ export const getBuildConfig = () => {
     version,
     ...commitInfo,
     buildMode,
-    isApp,
     template: process.env.DEFAULT_INPUT_TEMPLATE ?? DEFAULT_INPUT_TEMPLATE,
   };
 };

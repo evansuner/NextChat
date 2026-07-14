@@ -1,18 +1,9 @@
-import {
-  getMessageTextContent,
-  isDalle3,
-  safeLocalStorage,
-  trimTopic,
-} from "../utils";
+import { getMessageTextContent, safeLocalStorage, trimTopic } from "../utils";
 
 import { indexedDBStorage } from "@/app/utils/indexedDB-storage";
 import { nanoid } from "nanoid";
-import type {
-  ClientApi,
-  MultimodalContent,
-  RequestMessage,
-} from "../client/api";
-import { getClientApi } from "../client/api";
+import type { MultimodalContent, RequestMessage } from "../client/api";
+import { fetchChatText } from "../client/ai-sdk/chat-fetch";
 import { ChatControllerPool } from "../client/controller";
 import { showToast } from "../components/ui-lib";
 import {
@@ -503,11 +494,27 @@ export const useChatStore = createPersistStore(
           ]);
         });
 
-        const api: ClientApi = getClientApi(modelConfig.providerName);
-        // make request
-        api.llm.chat({
+        // Route the turn (used by MCP tool responses) through the server-side
+        // `/api/chat` route so no per-provider proxy handler is involved.
+        const controller = new AbortController();
+        ChatControllerPool.addController(
+          session.id,
+          botMessage.id ?? messageIndex,
+          controller,
+        );
+
+        fetchChatText({
+          provider: modelConfig.providerName,
+          model: modelConfig.model,
           messages: sendMessages,
-          config: { ...modelConfig, stream: true },
+          config: {
+            temperature: modelConfig.temperature,
+            top_p: modelConfig.top_p,
+            max_tokens: modelConfig.max_tokens,
+            presence_penalty: modelConfig.presence_penalty,
+            frequency_penalty: modelConfig.frequency_penalty,
+          },
+          signal: controller.signal,
           onUpdate(message) {
             botMessage.streaming = true;
             if (message) {
@@ -517,38 +524,40 @@ export const useChatStore = createPersistStore(
               session.messages = session.messages.concat();
             });
           },
-          async onFinish(message) {
+        })
+          .then(({ text, status }) => {
             botMessage.streaming = false;
-            if (message) {
-              botMessage.content = message;
+            if (status !== 200) {
+              const message = `request failed with status ${status}`;
+              botMessage.content +=
+                "\n\n" + prettyObject({ error: true, message });
+              userMessage.isError = true;
+              botMessage.isError = true;
+              get().updateTargetSession(session, (session) => {
+                session.messages = session.messages.concat();
+              });
+              ChatControllerPool.remove(
+                session.id,
+                botMessage.id ?? messageIndex,
+              );
+              return;
+            }
+            if (text) {
+              botMessage.content = text;
               botMessage.date = new Date().toLocaleString();
               get().onNewMessage(botMessage, session);
             }
             ChatControllerPool.remove(session.id, botMessage.id);
-          },
-          onBeforeTool(tool: ChatMessageTool) {
-            (botMessage.tools = botMessage?.tools || []).push(tool);
-            get().updateTargetSession(session, (session) => {
-              session.messages = session.messages.concat();
-            });
-          },
-          onAfterTool(tool: ChatMessageTool) {
-            botMessage?.tools?.forEach((t, i, tools) => {
-              if (tool.id == t.id) {
-                tools[i] = { ...tool };
-              }
-            });
-            get().updateTargetSession(session, (session) => {
-              session.messages = session.messages.concat();
-            });
-          },
-          onError(error) {
-            const isAborted = error.message?.includes?.("aborted");
+          })
+          .catch((error) => {
+            const isAborted =
+              controller.signal.aborted ||
+              !!error?.message?.includes?.("aborted");
             botMessage.content +=
               "\n\n" +
               prettyObject({
                 error: true,
-                message: error.message,
+                message: error?.message,
               });
             botMessage.streaming = false;
             userMessage.isError = !isAborted;
@@ -562,16 +571,7 @@ export const useChatStore = createPersistStore(
             );
 
             console.error("[Chat] failed ", error);
-          },
-          onController(controller) {
-            // collect controller for stop/retry
-            ChatControllerPool.addController(
-              session.id,
-              botMessage.id ?? messageIndex,
-              controller,
-            );
-          },
-        });
+          });
       },
 
       getMemoryPrompt() {
@@ -813,10 +813,6 @@ export const useChatStore = createPersistStore(
         const config = useAppConfig.getState();
         const session = targetSession;
         const modelConfig = session.mask.modelConfig;
-        // skip summarize when using dalle3?
-        if (isDalle3(modelConfig.model)) {
-          return;
-        }
 
         // if not config compressModel, then using getSummarizeModel
         const [model, providerName] = modelConfig.compressModel
@@ -825,7 +821,6 @@ export const useChatStore = createPersistStore(
               session.mask.modelConfig.model,
               session.mask.modelConfig.providerName,
             );
-        const api: ClientApi = getClientApi(providerName as ServiceProvider);
 
         // remove error messages if any
         const messages = session.messages;
@@ -853,23 +848,19 @@ export const useChatStore = createPersistStore(
                 content: Locale.Store.Prompt.Topic,
               }),
             );
-          api.llm.chat({
+          fetchChatText({
+            provider: providerName,
+            model,
             messages: topicMessages,
-            config: {
-              model,
-              stream: false,
-              providerName,
-            },
-            onFinish(message, responseRes) {
-              if (responseRes?.status === 200) {
-                get().updateTargetSession(
-                  session,
-                  (session) =>
-                    (session.topic =
-                      message.length > 0 ? trimTopic(message) : DEFAULT_TOPIC),
-                );
-              }
-            },
+          }).then(({ text, status }) => {
+            if (status === 200) {
+              get().updateTargetSession(
+                session,
+                (session) =>
+                  (session.topic =
+                    text.length > 0 ? trimTopic(text) : DEFAULT_TOPIC),
+              );
+            }
           });
         }
         const summarizeIndex = Math.max(
@@ -907,11 +898,9 @@ export const useChatStore = createPersistStore(
           historyMsgLength > modelConfig.compressMessageLengthThreshold &&
           modelConfig.sendMemory
         ) {
-          /** Destruct max_tokens while summarizing
-           * this param is just shit
-           **/
-          const { max_tokens, ...modelcfg } = modelConfig;
-          api.llm.chat({
+          fetchChatText({
+            provider: providerName,
+            model,
             messages: toBeSummarizedMsgs.concat(
               createMessage({
                 role: "system",
@@ -919,28 +908,27 @@ export const useChatStore = createPersistStore(
                 date: "",
               }),
             ),
+            // `max_tokens` is intentionally omitted while summarizing.
             config: {
-              ...modelcfg,
-              stream: true,
-              model,
-              providerName,
+              temperature: modelConfig.temperature,
+              top_p: modelConfig.top_p,
+              presence_penalty: modelConfig.presence_penalty,
+              frequency_penalty: modelConfig.frequency_penalty,
             },
-            onUpdate(message) {
-              session.memoryPrompt = message;
+            onUpdate(text) {
+              session.memoryPrompt = text;
             },
-            onFinish(message, responseRes) {
-              if (responseRes?.status === 200) {
-                console.log("[Memory] ", message);
+          })
+            .then(({ text, status }) => {
+              if (status === 200) {
+                console.log("[Memory] ", text);
                 get().updateTargetSession(session, (session) => {
                   session.lastSummarizeIndex = lastSummarizeIndex;
-                  session.memoryPrompt = message; // Update the memory prompt for stored it in local storage
+                  session.memoryPrompt = text; // Update the memory prompt for stored it in local storage
                 });
               }
-            },
-            onError(err) {
-              console.error("[Summarize] ", err);
-            },
-          });
+            })
+            .catch((err) => console.error("[Summarize] ", err));
         }
       },
 

@@ -130,8 +130,8 @@ export function RealtimeConfigList(props: {
           </ListItem>
           {azureConfigComponent}
           <ListItem
-            title={Locale.Settings.TTS.Voice.Title}
-            subTitle={Locale.Settings.TTS.Voice.SubTitle}
+            title={Locale.Settings.Realtime.Voice.Title}
+            subTitle={Locale.Settings.Realtime.Voice.SubTitle}
           >
             <Select
               value={props.realtimeConfig.voice}

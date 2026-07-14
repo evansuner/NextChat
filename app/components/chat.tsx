@@ -16,8 +16,6 @@ import EditIcon from "../icons/rename.svg";
 import ExportIcon from "../icons/share.svg";
 import ReturnIcon from "../icons/return.svg";
 import CopyIcon from "../icons/copy.svg";
-import SpeakIcon from "../icons/speak.svg";
-import SpeakStopIcon from "../icons/speak-stop.svg";
 import LoadingIcon from "../icons/three-dots.svg";
 import LoadingButtonIcon from "../icons/loading.svg";
 import PromptIcon from "../icons/prompt.svg";
@@ -42,8 +40,6 @@ import BottomIcon from "../icons/bottom.svg";
 import StopIcon from "../icons/pause.svg";
 import RobotIcon from "../icons/robot.svg";
 import SizeIcon from "../icons/size.svg";
-import QualityIcon from "../icons/hd.svg";
-import StyleIcon from "../icons/palette.svg";
 import PluginIcon from "../icons/plugin.svg";
 import ShortcutkeyIcon from "../icons/shortcutkey.svg";
 import McpToolIcon from "../icons/tool.svg";
@@ -68,7 +64,6 @@ import {
   copyToClipboard,
   getMessageImages,
   getMessageTextContent,
-  isDalle3,
   isVisionModel,
   safeLocalStorage,
   getModelSizes,
@@ -83,7 +78,7 @@ import { uploadImage as uploadImageRemote } from "@/app/utils/chat";
 import dynamic from "next/dynamic";
 
 import { ChatControllerPool } from "../client/controller";
-import { DalleQuality, DalleStyle, ModelSize } from "../typing";
+import { ModelSize } from "../typing";
 import { Prompt, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
 
@@ -101,8 +96,6 @@ import {
 import { useNavigate } from "react-router-dom";
 import {
   CHAT_PAGE_SIZE,
-  DEFAULT_TTS_ENGINE,
-  ModelProvider,
   Path,
   REQUEST_TIMEOUT_MS,
   ServiceProvider,
@@ -114,14 +107,11 @@ import { useMaskStore } from "../store/mask";
 import { ChatCommandPrefix, useChatCommand, useCommand } from "../command";
 import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
-import { getClientConfig } from "../config/client";
 import { useAllModels } from "../utils/hooks";
-import { ClientApi, getClientApi, MultimodalContent } from "../client/api";
-import { NextChatTransport } from "../client/ai-sdk/chat-transport";
+import { getChatAuthHeaders, MultimodalContent } from "../client/api";
+import { DefaultChatTransport } from "ai";
 import { extractUIText, extractUITools } from "../client/ai-sdk/ui-message";
 import { useChat } from "@ai-sdk/react";
-import { createTTSPlayer } from "../utils/audio";
-import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
 
 import { isEmpty } from "lodash-es";
 import { getModelProvider } from "../utils/model";
@@ -130,8 +120,6 @@ import clsx from "clsx";
 import { getAvailableClientsCount, isMcpEnabled } from "../mcp/actions";
 
 const localStorage = safeLocalStorage();
-
-const ttsPlayer = createTTSPlayer();
 
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
@@ -257,9 +245,7 @@ function PromptToast(props: {
           onClick={() => props.setShowModal(true)}
         >
           <BrainIcon />
-          <span className="ml-2.5">
-            {Locale.Context.Toast(context.length)}
-          </span>
+          <span className="ml-2.5">{Locale.Context.Toast(context.length)}</span>
         </div>
       )}
       {props.showModal && (
@@ -581,15 +567,9 @@ export function ChatActions(props: {
   const [showUploadImage, setShowUploadImage] = useState(false);
 
   const [showSizeSelector, setShowSizeSelector] = useState(false);
-  const [showQualitySelector, setShowQualitySelector] = useState(false);
-  const [showStyleSelector, setShowStyleSelector] = useState(false);
   const modelSizes = getModelSizes(currentModel);
-  const dalle3Qualitys: DalleQuality[] = ["standard", "hd"];
-  const dalle3Styles: DalleStyle[] = ["vivid", "natural"];
   const currentSize =
     session.mask.modelConfig?.size ?? ("1024x1024" as ModelSize);
-  const currentQuality = session.mask.modelConfig?.quality ?? "standard";
-  const currentStyle = session.mask.modelConfig?.style ?? "vivid";
 
   const isMobileScreen = useMobileScreen();
 
@@ -761,60 +741,6 @@ export function ChatActions(props: {
                 session.mask.modelConfig.size = size;
               });
               showToast(size);
-            }}
-          />
-        )}
-
-        {isDalle3(currentModel) && (
-          <ChatAction
-            onClick={() => setShowQualitySelector(true)}
-            text={currentQuality}
-            icon={<QualityIcon />}
-          />
-        )}
-
-        {showQualitySelector && (
-          <Selector
-            defaultSelectedValue={currentQuality}
-            items={dalle3Qualitys.map((m) => ({
-              title: m,
-              value: m,
-            }))}
-            onClose={() => setShowQualitySelector(false)}
-            onSelection={(q) => {
-              if (q.length === 0) return;
-              const quality = q[0];
-              chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.quality = quality;
-              });
-              showToast(quality);
-            }}
-          />
-        )}
-
-        {isDalle3(currentModel) && (
-          <ChatAction
-            onClick={() => setShowStyleSelector(true)}
-            text={currentStyle}
-            icon={<StyleIcon />}
-          />
-        )}
-
-        {showStyleSelector && (
-          <Selector
-            defaultSelectedValue={currentStyle}
-            items={dalle3Styles.map((m) => ({
-              title: m,
-              value: m,
-            }))}
-            onClose={() => setShowStyleSelector(false)}
-            onSelection={(s) => {
-              if (s.length === 0) return;
-              const style = s[0];
-              chatStore.updateTargetSession(session, (session) => {
-                session.mask.modelConfig.style = style;
-              });
-              showToast(style);
             }}
           />
         )}
@@ -1066,30 +992,41 @@ function _Chat() {
   const [uploading, setUploading] = useState(false);
 
   // === AI SDK UI (useChat) integration ==================================
-  // The conversation is streamed through AI SDK UI's `useChat` hook. A custom
-  // client-side transport drives NextChat's existing per-provider clients (no
-  // server route) and streams the assistant response into the store-backed
-  // placeholder message, so the original rendering/editing/export UI keeps
-  // working while `useChat` owns the live streaming state.
+  // The conversation is streamed through AI SDK UI's `useChat` hook using the
+  // default HTTP transport, which POSTs to the server-side `/api/chat` route.
+  // The server builds the per-provider AI SDK client (real API key + base URL)
+  // and runs `streamText`, streaming text/reasoning/image parts back into the
+  // store-backed placeholder message so the original rendering/editing/export
+  // UI keeps working while `useChat` owns the live streaming state.
   const botMessageIdRef = useRef<string | null>(null);
 
   const transport = useMemo(
     () =>
-      new NextChatTransport(async () => {
-        const store = useChatStore.getState();
-        const currentSession = store.currentSession();
-        const modelConfig = currentSession.mask.modelConfig;
-        const messages = await store.getMessagesForSend();
-        const api = getClientApi(
-          modelConfig.providerName as unknown as ServiceProvider,
-        );
-        return {
-          api,
-          messages,
-          config: { ...modelConfig, stream: true },
-          sessionId: currentSession.id,
-          messageId: botMessageIdRef.current ?? undefined,
-        };
+      new DefaultChatTransport({
+        api: "/api/chat",
+        prepareSendMessagesRequest: async () => {
+          const store = useChatStore.getState();
+          const currentSession = store.currentSession();
+          const modelConfig = currentSession.mask.modelConfig;
+          const messages = await store.getMessagesForSend();
+          const providerName =
+            modelConfig.providerName as unknown as ServiceProvider;
+          return {
+            headers: getChatAuthHeaders(providerName),
+            body: {
+              provider: providerName,
+              model: modelConfig.model,
+              messages,
+              config: {
+                temperature: modelConfig.temperature,
+                top_p: modelConfig.top_p,
+                max_tokens: modelConfig.max_tokens,
+                presence_penalty: modelConfig.presence_penalty,
+                frequency_penalty: modelConfig.frequency_penalty,
+              },
+            },
+          };
+        },
       }),
     [],
   );
@@ -1108,6 +1045,8 @@ function _Chat() {
 
       const store = useChatStore.getState();
       const target = store.currentSession();
+      // Unregister the stop controller for this turn.
+      ChatControllerPool.remove(target.id, bid);
       store.updateTargetSession(target, (s) => {
         const bm = s.messages.find((m) => m.id === bid);
         if (!bm) return;
@@ -1131,7 +1070,8 @@ function _Chat() {
           // Authoritatively write the final streamed content/tools so nothing
           // is lost if the last chunk coincides with the status change.
           if (opts.finalText) bm.content = opts.finalText;
-          if (opts.finalTools && opts.finalTools.length) bm.tools = opts.finalTools;
+          if (opts.finalTools && opts.finalTools.length)
+            bm.tools = opts.finalTools;
         }
       });
 
@@ -1193,12 +1133,20 @@ function _Chat() {
         .getState()
         .prepareUserTurn(content, images);
       botMessageIdRef.current = botMessageId;
+      // Register a synthetic controller so the existing stop / stop-all UI
+      // (ChatControllerPool) can abort this useChat turn.
+      const sessionId = useChatStore.getState().currentSession().id;
+      ChatControllerPool.addController(sessionId, botMessageId, {
+        abort: () => chat.stop(),
+      } as unknown as AbortController);
       // The transport reads the request from the store, so useChat's own
       // buffer only needs to trigger a turn — reset it and send.
       chat.setMessages([]);
-      chat.sendMessage({ text: content.length > 0 ? content : "[image]" }).catch((e) => {
-        finalizeBotMessage({ isError: true, errorMessage: String(e) });
-      });
+      chat
+        .sendMessage({ text: content.length > 0 ? content : "[image]" })
+        .catch((e) => {
+          finalizeBotMessage({ isError: true, errorMessage: String(e) });
+        });
     },
     [chat, finalizeBotMessage],
   );
@@ -1454,51 +1402,6 @@ function _Chat() {
   };
 
   const accessStore = useAccessStore();
-  const [speechStatus, setSpeechStatus] = useState(false);
-  const [speechLoading, setSpeechLoading] = useState(false);
-
-  async function openaiSpeech(text: string) {
-    if (speechStatus) {
-      ttsPlayer.stop();
-      setSpeechStatus(false);
-    } else {
-      var api: ClientApi;
-      api = new ClientApi(ModelProvider.GPT);
-      const config = useAppConfig.getState();
-      setSpeechLoading(true);
-      ttsPlayer.init();
-      let audioBuffer: ArrayBuffer;
-      const { markdownToTxt } = require("markdown-to-txt");
-      const textContent = markdownToTxt(text);
-      if (config.ttsConfig.engine !== DEFAULT_TTS_ENGINE) {
-        const edgeVoiceName = accessStore.edgeVoiceName();
-        const tts = new MsEdgeTTS();
-        await tts.setMetadata(
-          edgeVoiceName,
-          OUTPUT_FORMAT.AUDIO_24KHZ_96KBITRATE_MONO_MP3,
-        );
-        audioBuffer = await tts.toArrayBuffer(textContent);
-      } else {
-        audioBuffer = await api.llm.speech({
-          model: config.ttsConfig.model,
-          input: textContent,
-          voice: config.ttsConfig.voice,
-          speed: config.ttsConfig.speed,
-        });
-      }
-      setSpeechStatus(true);
-      ttsPlayer
-        .play(audioBuffer, () => {
-          setSpeechStatus(false);
-        })
-        .catch((e) => {
-          console.error("[OpenAI Speech]", e);
-          showToast(prettyObject(e));
-          setSpeechStatus(false);
-        })
-        .finally(() => setSpeechLoading(false));
-    }
-  }
 
   const context: RenderMessage[] = useMemo(() => {
     return session.mask.hideContext ? [] : session.mask.context.slice();
@@ -1606,10 +1509,8 @@ function _Chat() {
 
   const [showPromptModal, setShowPromptModal] = useState(false);
 
-  const clientConfig = useMemo(() => getClientConfig(), []);
-
   const autoFocus = !isMobileScreen; // wont auto focus on mobile screen
-  const showMaxIcon = !isMobileScreen && !clientConfig?.isApp;
+  const showMaxIcon = !isMobileScreen;
 
   useCommand({
     fill: setUserInput,
@@ -1852,7 +1753,7 @@ function _Chat() {
   return (
     <>
       <div className="relative flex h-full flex-col" key={session.id}>
-        <div className="window-header" data-tauri-drag-region>
+        <div className="window-header">
           {isMobileScreen && (
             <div className="window-actions">
               <div className={"window-action-button"}>
@@ -2093,27 +1994,6 @@ function _Chat() {
                                           )
                                         }
                                       />
-                                      {config.ttsConfig.enable && (
-                                        <ChatAction
-                                          text={
-                                            speechStatus
-                                              ? Locale.Chat.Actions.StopSpeech
-                                              : Locale.Chat.Actions.Speech
-                                          }
-                                          icon={
-                                            speechStatus ? (
-                                              <SpeakStopIcon />
-                                            ) : (
-                                              <SpeakIcon />
-                                            )
-                                          }
-                                          onClick={() =>
-                                            openaiSpeech(
-                                              getMessageTextContent(message),
-                                            )
-                                          }
-                                        />
-                                      )}
                                     </>
                                   )}
                                 </div>

@@ -15,19 +15,13 @@ declare global {
 
       VERCEL?: string;
       BUILD_MODE?: "standalone" | "export";
-      BUILD_APP?: string; // is building desktop app
 
       HIDE_USER_API_KEY?: string; // disable user's api key input
       DISABLE_GPT4?: string; // allow user to use gpt-4 or not
-      ENABLE_BALANCE_QUERY?: string; // allow user to query balance or not
       DISABLE_FAST_LINK?: string; // disallow parse settings from url or not
       CUSTOM_MODELS?: string; // to control custom models
       DEFAULT_MODEL?: string; // to control default model in every new chat window
       VISION_MODELS?: string; // to control vision models
-
-      // stability only
-      STABILITY_URL?: string;
-      STABILITY_API_KEY?: string;
 
       // azure only
       AZURE_URL?: string; // https://{azure-url}/openai/deployments/{deploy-name}
@@ -155,8 +149,6 @@ export const getServerSideConfig = () => {
     }
   }
 
-  const isStability = !!process.env.STABILITY_API_KEY;
-
   const isAzure = !!process.env.AZURE_URL;
   const isGoogle = !!process.env.GOOGLE_API_KEY;
   const isAnthropic = !!process.env.ANTHROPIC_API_KEY;
@@ -188,10 +180,6 @@ export const getServerSideConfig = () => {
     baseUrl: process.env.BASE_URL,
     apiKey: getApiKey(process.env.OPENAI_API_KEY),
     openaiOrgId: process.env.OPENAI_ORG_ID,
-
-    isStability,
-    stabilityUrl: process.env.STABILITY_URL,
-    stabilityApiKey: getApiKey(process.env.STABILITY_API_KEY),
 
     isAzure,
     azureUrl: process.env.AZURE_URL,
@@ -275,7 +263,6 @@ export const getServerSideConfig = () => {
 
     hideUserApiKey: !!process.env.HIDE_USER_API_KEY,
     disableGPT4,
-    hideBalanceQuery: !process.env.ENABLE_BALANCE_QUERY,
     disableFastLink: !!process.env.DISABLE_FAST_LINK,
     customModels,
     defaultModel,
@@ -283,5 +270,5 @@ export const getServerSideConfig = () => {
     allowedWebDavEndpoints,
     enableMcp: process.env.ENABLE_MCP === "true",
   };
-  return  serverSideConfig;
+  return serverSideConfig;
 };

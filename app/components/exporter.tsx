@@ -34,7 +34,6 @@ import { toBlob, toPng } from "html-to-image";
 
 import { prettyObject } from "../utils/format";
 import { EXPORT_MESSAGE_CLASS_NAME } from "../constant";
-import { getClientConfig } from "../config/client";
 import { type ClientApi, getClientApi } from "../client/api";
 import { getMessageTextContent } from "../utils";
 import { MaskAvatar } from "./mask";
@@ -279,7 +278,7 @@ export function RenderExport(props: {
       return {
         id: i.toString(),
         role: role as any,
-        content: role === "user" ? v.textContent ?? "" : v.innerHTML,
+        content: role === "user" ? (v.textContent ?? "") : v.innerHTML,
         date: "",
       };
     });
@@ -450,40 +449,12 @@ export function ImagePreviewer(props: {
     const dom = previewRef.current;
     if (!dom) return;
 
-    const isApp = getClientConfig()?.isApp;
-
     try {
       const blob = await toPng(dom);
       if (!blob) return;
 
-      if (isMobile || (isApp && window.__TAURI__)) {
-        if (isApp && window.__TAURI__) {
-          const result = await window.__TAURI__.dialog.save({
-            defaultPath: `${props.topic}.png`,
-            filters: [
-              {
-                name: "PNG Files",
-                extensions: ["png"],
-              },
-              {
-                name: "All Files",
-                extensions: ["*"],
-              },
-            ],
-          });
-
-          if (result !== null) {
-            const response = await fetch(blob);
-            const buffer = await response.arrayBuffer();
-            const uint8Array = new Uint8Array(buffer);
-            await window.__TAURI__.fs.writeBinaryFile(result, uint8Array);
-            showToast(Locale.Download.Success);
-          } else {
-            showToast(Locale.Download.Failed);
-          }
-        } else {
-          showImageModal(blob);
-        }
+      if (isMobile) {
+        showImageModal(blob);
       } else {
         const link = document.createElement("a");
         link.download = `${props.topic}.png`;
@@ -516,7 +487,9 @@ export function ImagePreviewer(props: {
         ref={previewRef}
       >
         <div className="relative mb-5 flex items-end justify-between overflow-hidden rounded-[10px] bg-second p-5 max-[600px]:flex-col max-[600px]:items-start">
-          <div className={clsx("absolute top-0 left-0 h-1/2 scale-150", "no-dark")}>
+          <div
+            className={clsx("absolute top-0 left-0 h-1/2 scale-150", "no-dark")}
+          >
             <NextImage
               src={ChatGptIcon.src}
               alt="logo"
@@ -542,16 +515,16 @@ export function ImagePreviewer(props: {
             </div>
           </div>
           <div>
-            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card not-last:mb-1.25">
               {Locale.Exporter.Model}: {mask.modelConfig.model}
             </div>
-            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card not-last:mb-1.25">
               {Locale.Exporter.Messages}: {props.messages.length}
             </div>
-            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card not-last:mb-1.25">
               {Locale.Exporter.Topic}: {session.topic}
             </div>
-            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card [&:not(:last-child)]:mb-1.25">
+            <div className="rounded-[10px] bg-white px-3.75 py-0.5 text-xs text-primary shadow-card not-last:mb-1.25">
               {Locale.Exporter.Time}:{" "}
               {new Date(
                 props.messages.at(-1)?.date ?? Date.now(),
@@ -605,7 +578,7 @@ export function ImagePreviewer(props: {
                 )}
                 {getMessageImages(m).length > 1 && (
                   <div
-                    className="mt-2.5 grid gap-2.5 [grid-template-columns:repeat(var(--image-count),auto)] [justify-content:left]"
+                    className="mt-2.5 grid gap-2.5 grid-cols-[repeat(var(--image-count),auto)] [justify-content:left]"
                     style={
                       {
                         "--image-count": getMessageImages(m).length,
@@ -617,7 +590,7 @@ export function ImagePreviewer(props: {
                         key={i}
                         src={src}
                         alt="message"
-                        className="box-border rounded-[10px] object-cover [border:1px_solid_rgba(136,136,136,0.2)] max-[600px]:h-[calc(calc(100vw/2)/var(--image-count))] max-[600px]:w-[calc(calc(100vw/2)/var(--image-count))] min-[600px]:h-[calc(80vw/3*2/var(--image-count))] min-[600px]:max-h-[calc(900px/3*2/var(--image-count))] min-[600px]:w-[calc(80vw/3*2/var(--image-count))] min-[600px]:max-w-[calc(900px/3*2/var(--image-count))]"
+                        className="box-border rounded-[10px] object-cover [border:1px_solid_rgba(136,136,136,0.2)] max-[600px]:h-[calc(50vw/var(--image-count))] max-[600px]:w-[calc(50vw/var(--image-count))] min-[600px]:h-[calc(80vw/3*2/var(--image-count))] min-[600px]:max-h-[calc(900px/3*2/var(--image-count))] min-[600px]:w-[calc(80vw/3*2/var(--image-count))] min-[600px]:max-w-[calc(900px/3*2/var(--image-count))]"
                       />
                     ))}
                   </div>

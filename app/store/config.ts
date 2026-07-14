@@ -1,16 +1,10 @@
 import { LLMModel } from "../client/api";
-import { DalleQuality, DalleStyle, ModelSize } from "../typing";
+import { ModelSize } from "../typing";
 import { getClientConfig } from "../config/client";
 import {
   DEFAULT_INPUT_TEMPLATE,
   DEFAULT_MODELS,
   DEFAULT_SIDEBAR_WIDTH,
-  DEFAULT_TTS_ENGINE,
-  DEFAULT_TTS_ENGINES,
-  DEFAULT_TTS_MODEL,
-  DEFAULT_TTS_MODELS,
-  DEFAULT_TTS_VOICE,
-  DEFAULT_TTS_VOICES,
   StoreKey,
   ServiceProvider,
 } from "../constant";
@@ -18,9 +12,6 @@ import { createPersistStore } from "../utils/store";
 import type { Voice } from "rt-client";
 
 export type ModelType = (typeof DEFAULT_MODELS)[number]["name"];
-export type TTSModelType = (typeof DEFAULT_TTS_MODELS)[number];
-export type TTSVoiceType = (typeof DEFAULT_TTS_VOICES)[number];
-export type TTSEngineType = (typeof DEFAULT_TTS_ENGINES)[number];
 
 export enum SubmitKey {
   Enter = "Enter",
@@ -46,7 +37,7 @@ export const DEFAULT_CONFIG = {
   fontSize: 14,
   fontFamily: "",
   theme: Theme.Auto as Theme,
-  tightBorder: !!config?.isApp,
+  tightBorder: false,
   sendPreviewBubble: true,
   enableAutoGenerateTitle: true,
   sidebarWidth: DEFAULT_SIDEBAR_WIDTH,
@@ -80,17 +71,6 @@ export const DEFAULT_CONFIG = {
     enableInjectSystemPrompts: true,
     template: config?.template ?? DEFAULT_INPUT_TEMPLATE,
     size: "1024x1024" as ModelSize,
-    quality: "standard" as DalleQuality,
-    style: "vivid" as DalleStyle,
-  },
-
-  ttsConfig: {
-    enable: false,
-    autoplay: false,
-    engine: DEFAULT_TTS_ENGINE,
-    model: DEFAULT_TTS_MODEL,
-    voice: DEFAULT_TTS_VOICE,
-    speed: 1.0,
   },
 
   realtimeConfig: {
@@ -110,7 +90,6 @@ export const DEFAULT_CONFIG = {
 export type ChatConfig = typeof DEFAULT_CONFIG;
 
 export type ModelConfig = ChatConfig["modelConfig"];
-export type TTSConfig = ChatConfig["ttsConfig"];
 export type RealtimeConfig = ChatConfig["realtimeConfig"];
 
 export function limitNumber(
@@ -125,21 +104,6 @@ export function limitNumber(
 
   return Math.min(max, Math.max(min, x));
 }
-
-export const TTSConfigValidator = {
-  engine(x: string) {
-    return x as TTSEngineType;
-  },
-  model(x: string) {
-    return x as TTSModelType;
-  },
-  voice(x: string) {
-    return x as TTSVoiceType;
-  },
-  speed(x: number) {
-    return limitNumber(x, 0.25, 4.0, 1.0);
-  },
-};
 
 export const ModalConfigValidator = {
   model(x: string) {

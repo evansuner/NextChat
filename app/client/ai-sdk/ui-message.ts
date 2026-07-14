@@ -15,8 +15,12 @@ import { getMessageImages, getMessageTextContent } from "@/app/utils";
 
 type AnyPart = UIMessage["parts"][number] & Record<string, any>;
 
-/** Extract the plain text (with reasoning rendered as blockquotes) from parts. */
-function partsToText(parts: AnyPart[]): string {
+/**
+ * Extract the plain text (with reasoning rendered as blockquotes) from parts.
+ * When `includeFileImages` is set, assistant-generated image files are appended
+ * as markdown images so multimodal image output renders in the chat.
+ */
+function partsToText(parts: AnyPart[], includeFileImages = false): string {
   let text = "";
   let inReasoning = false;
 
@@ -38,6 +42,18 @@ function partsToText(parts: AnyPart[]): string {
       } else {
         text += chunk.split("\n\n").join("\n\n> ");
       }
+    } else if (
+      includeFileImages &&
+      part.type === "file" &&
+      typeof part.url === "string" &&
+      (part.mediaType?.startsWith("image") ?? false)
+    ) {
+      if (inReasoning) {
+        inReasoning = false;
+        text += "\n\n";
+      }
+      if (text.length > 0) text += "\n\n";
+      text += `![image](${part.url})`;
     }
   }
 
@@ -115,7 +131,7 @@ export function uiMessagesToChatMessages(
 
   return uiMessages.map((m, index) => {
     const parts = (m.parts ?? []) as AnyPart[];
-    const text = partsToText(parts);
+    const text = partsToText(parts, m.role === "assistant");
     const images = m.role === "user" ? partsToImages(parts) : [];
     const tools = m.role === "assistant" ? partsToTools(parts) : [];
     const metadata = (m.metadata ?? {}) as Record<string, any>;
@@ -181,7 +197,7 @@ export function chatMessagesToUIMessages(messages: ChatMessage[]): UIMessage[] {
 
 /** Extract the plain text (reasoning rendered as blockquotes) from a UIMessage. */
 export function extractUIText(message: UIMessage): string {
-  return partsToText((message.parts ?? []) as AnyPart[]);
+  return partsToText((message.parts ?? []) as AnyPart[], true);
 }
 
 /** Extract NextChat tool records from a UIMessage's tool/dynamic-tool parts. */

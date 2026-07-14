@@ -1,19 +1,7 @@
-import { Anthropic, ApiPath } from "@/app/constant";
-import { ChatOptions, getHeaders, LLMApi, SpeechOptions } from "../api";
-import {
-  useAccessStore,
-  useAppConfig,
-  useChatStore,
-  usePluginStore,
-} from "@/app/store";
-import { getClientConfig } from "@/app/config/client";
-import { ANTHROPIC_BASE_URL } from "@/app/constant";
-import { getMessageTextContent, isVisionModel } from "@/app/utils";
-import { preProcessImageContent } from "@/app/utils/chat";
+import { ApiPath } from "@/app/constant";
+import { LLMApi } from "../api";
+import { useAccessStore } from "@/app/store";
 import { cloudflareAIGatewayUrl } from "@/app/utils/cloudflare";
-import { streamWithAISDK } from "../ai-sdk/stream";
-import { createChatModel } from "../ai-sdk/providers";
-import { fetch } from "@/app/utils/stream";
 
 export type MultiBlockContent = {
   type: "image" | "text";
@@ -72,199 +60,10 @@ const ClaudeMapper = {
 } as const;
 
 export class ClaudeApi implements LLMApi {
-  speech(options: SpeechOptions): Promise<ArrayBuffer> {
-    throw new Error("Method not implemented.");
-  }
-
   extractMessage(res: any) {
     console.log("[Response] claude response: ", res);
 
     return res?.content?.[0]?.text;
-  }
-  async chat(options: ChatOptions): Promise<void> {
-    const visionModel = isVisionModel(options.config.model);
-
-    const accessStore = useAccessStore.getState();
-
-    const shouldStream = !!options.config.stream;
-
-    const modelConfig = {
-      ...useAppConfig.getState().modelConfig,
-      ...useChatStore.getState().currentSession().mask.modelConfig,
-      ...{
-        model: options.config.model,
-      },
-    };
-
-    // try get base64image from local cache image_url
-    const messages: ChatOptions["messages"] = [];
-    for (const v of options.messages) {
-      const content = await preProcessImageContent(v.content);
-      messages.push({ role: v.role, content });
-    }
-
-    const keys = ["system", "user"];
-
-    // roles must alternate between "user" and "assistant" in claude, so add a fake assistant message between two user messages
-    for (let i = 0; i < messages.length - 1; i++) {
-      const message = messages[i];
-      const nextMessage = messages[i + 1];
-
-      if (keys.includes(message.role) && keys.includes(nextMessage.role)) {
-        messages[i] = [
-          message,
-          {
-            role: "assistant",
-            content: ";",
-          },
-        ] as any;
-      }
-    }
-
-    const prompt = messages
-      .flat()
-      .filter((v) => {
-        if (!v.content) return false;
-        if (typeof v.content === "string" && !v.content.trim()) return false;
-        return true;
-      })
-      .map((v) => {
-        const { role, content } = v;
-        const insideRole = ClaudeMapper[role] ?? "user";
-
-        if (!visionModel || typeof content === "string") {
-          return {
-            role: insideRole,
-            content: getMessageTextContent(v),
-          };
-        }
-        return {
-          role: insideRole,
-          content: content
-            .filter((v) => v.image_url || v.text)
-            .map(({ type, text, image_url }) => {
-              if (type === "text") {
-                return {
-                  type,
-                  text: text!,
-                };
-              }
-              const { url = "" } = image_url || {};
-              const colonIndex = url.indexOf(":");
-              const semicolonIndex = url.indexOf(";");
-              const comma = url.indexOf(",");
-
-              const mimeType = url.slice(colonIndex + 1, semicolonIndex);
-              const encodeType = url.slice(semicolonIndex + 1, comma);
-              const data = url.slice(comma + 1);
-
-              return {
-                type: "image" as const,
-                source: {
-                  type: encodeType,
-                  media_type: mimeType,
-                  data,
-                },
-              };
-            }),
-        };
-      });
-
-    if (prompt[0]?.role === "assistant") {
-      prompt.unshift({
-        role: "user",
-        content: ";",
-      });
-    }
-
-    const requestBody: AnthropicChatRequest = {
-      messages: prompt,
-      stream: shouldStream,
-
-      model: modelConfig.model,
-      max_tokens: modelConfig.max_tokens,
-      // Anthropic does not allow both temperature and top_p at the same time
-      ...(modelConfig.temperature != null
-        ? { temperature: modelConfig.temperature }
-        : { top_p: modelConfig.top_p }),
-      // top_k: modelConfig.top_k,
-      top_k: 5,
-    };
-
-    const path = this.path(Anthropic.ChatPath);
-
-    const controller = new AbortController();
-    options.onController?.(controller);
-
-    if (shouldStream) {
-      const [tools, funcs] = usePluginStore
-        .getState()
-        .getAsTools(
-          useChatStore.getState().currentSession().mask?.plugin || [],
-        );
-
-      // Route streaming through the Vercel AI SDK using the dedicated Anthropic
-      // client, pointed at the same base URL and auth headers NextChat already
-      // resolves. The SDK builds the native Anthropic message format from the
-      // OpenAI-style messages, so the bespoke prompt transform is no longer
-      // needed for streaming.
-      const baseURL = path.replace(/\/messages$/, "");
-      const model = createChatModel({
-        kind: "anthropic",
-        model: modelConfig.model,
-        baseURL,
-        headers: {
-          ...getHeaders(),
-          "anthropic-version": accessStore.anthropicApiVersion,
-        },
-      });
-
-      return streamWithAISDK({
-        model,
-        messages,
-        // Anthropic does not allow both temperature and top_p at the same time.
-        temperature:
-          modelConfig.temperature != null ? modelConfig.temperature : undefined,
-        topP: modelConfig.temperature != null ? undefined : modelConfig.top_p,
-        maxTokens: modelConfig.max_tokens,
-        tools: tools as any[],
-        funcs,
-        controller,
-        options,
-      });
-    } else {
-      const payload = {
-        method: "POST",
-        body: JSON.stringify(requestBody),
-        signal: controller.signal,
-        headers: {
-          ...getHeaders(), // get common headers
-          "anthropic-version": accessStore.anthropicApiVersion,
-          // do not send `anthropicApiKey` in browser!!!
-          // Authorization: getAuthKey(accessStore.anthropicApiKey),
-        },
-      };
-
-      try {
-        controller.signal.onabort = () =>
-          options.onFinish("", new Response(null, { status: 400 }));
-
-        const res = await fetch(path, payload);
-        const resJson = await res.json();
-
-        const message = this.extractMessage(resJson);
-        options.onFinish(message, res);
-      } catch (e) {
-        console.error("failed to chat", e);
-        options.onError?.(e as Error);
-      }
-    }
-  }
-  async usage() {
-    return {
-      used: 0,
-      total: 0,
-    };
   }
   async models() {
     // const provider = {
@@ -317,9 +116,7 @@ export class ClaudeApi implements LLMApi {
 
     // if endpoint is empty, use default endpoint
     if (baseUrl.trim().length === 0) {
-      const isApp = !!getClientConfig()?.isApp;
-
-      baseUrl = isApp ? ANTHROPIC_BASE_URL : ApiPath.Anthropic;
+      baseUrl = ApiPath.Anthropic;
     }
 
     if (!baseUrl.startsWith("http") && !baseUrl.startsWith("/api")) {

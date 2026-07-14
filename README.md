@@ -103,7 +103,6 @@ For enterprise inquiries, please contact: **business@nextchat.dev**
 - [x] User Prompt: user can edit and save custom prompts to prompt list
 - [x] Prompt Template: create a new chat with pre-defined in-context prompts [#993](https://github.com/Yidadaa/ChatGPT-Next-Web/issues/993)
 - [x] Share as image, share to ShareGPT [#1741](https://github.com/Yidadaa/ChatGPT-Next-Web/pull/1741)
-- [x] Desktop App with tauri
 - [x] Self-host Model: Fully compatible with [RWKV-Runner](https://github.com/josStorer/RWKV-Runner), as well as server deployment of [LocalAI](https://github.com/go-skynet/LocalAI): llama/gpt4all/rwkv/vicuna/koala/gpt4all-j/cerebras/falcon/dolly etc.
 - [x] Artifacts: Easily preview, copy and share generated content/webpages through a separate window [#5092](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/pull/5092)
 - [x] Plugins: support network search, calculator, any other apis etc. [#165](https://github.com/Yidadaa/ChatGPT-Next-Web/issues/165) [#5353](https://github.com/ChatGPTNextWeb/ChatGPT-Next-Web/issues/5353)
@@ -346,14 +345,6 @@ You can use this option if you want to increase the number of webdav service add
 ### `DEFAULT_INPUT_TEMPLATE` (optional)
 
 Customize the default template used to initialize the User Input Preprocessing configuration item in Settings.
-
-### `STABILITY_API_KEY` (optional)
-
-Stability API key.
-
-### `STABILITY_URL` (optional)
-
-Customize Stability API url.
 
 ### `ENABLE_MCP` (optional)
 

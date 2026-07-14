@@ -11,7 +11,6 @@ import {
   ALIBABA_BASE_URL,
   TENCENT_BASE_URL,
   MOONSHOT_BASE_URL,
-  STABILITY_BASE_URL,
   IFLYTEK_BASE_URL,
   DEEPSEEK_BASE_URL,
   XAI_BASE_URL,
@@ -47,8 +46,6 @@ const DEFAULT_TENCENT_URL = isApp ? TENCENT_BASE_URL : ApiPath.Tencent;
 
 const DEFAULT_MOONSHOT_URL = isApp ? MOONSHOT_BASE_URL : ApiPath.Moonshot;
 
-const DEFAULT_STABILITY_URL = isApp ? STABILITY_BASE_URL : ApiPath.Stability;
-
 const DEFAULT_IFLYTEK_URL = isApp ? IFLYTEK_BASE_URL : ApiPath.Iflytek;
 
 const DEFAULT_DEEPSEEK_URL = isApp ? DEEPSEEK_BASE_URL : ApiPath.DeepSeek;
@@ -63,9 +60,7 @@ const DEFAULT_SILICONFLOW_URL = isApp
 
 const DEFAULT_AI302_URL = isApp ? AI302_BASE_URL : ApiPath["302.AI"];
 
-const DEFAULT_OPENROUTER_URL = isApp
-  ? OPENROUTER_BASE_URL
-  : ApiPath.OpenRouter;
+const DEFAULT_OPENROUTER_URL = isApp ? OPENROUTER_BASE_URL : ApiPath.OpenRouter;
 
 const DEFAULT_ACCESS_STATE = {
   accessCode: "",
@@ -110,10 +105,6 @@ const DEFAULT_ACCESS_STATE = {
   moonshotUrl: DEFAULT_MOONSHOT_URL,
   moonshotApiKey: "",
 
-  //stability
-  stabilityUrl: DEFAULT_STABILITY_URL,
-  stabilityApiKey: "",
-
   // tencent
   tencentUrl: DEFAULT_TENCENT_URL,
   tencentSecretKey: "",
@@ -151,15 +142,11 @@ const DEFAULT_ACCESS_STATE = {
   // server config
   needCode: true,
   hideUserApiKey: false,
-  hideBalanceQuery: false,
   disableGPT4: false,
   disableFastLink: false,
   customModels: "",
   defaultModel: "",
   visionModels: "",
-
-  // tts config
-  edgeTTSVoiceName: "zh-CN-YunxiNeural",
 };
 
 export const useAccessStore = createPersistStore(
@@ -174,11 +161,6 @@ export const useAccessStore = createPersistStore(
     getVisionModels() {
       this.fetch();
       return get().visionModels;
-    },
-    edgeVoiceName() {
-      this.fetch();
-
-      return get().edgeTTSVoiceName;
     },
 
     isValidOpenAI() {

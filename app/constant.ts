@@ -9,8 +9,6 @@ export const FETCH_COMMIT_URL = `https://api.github.com/repos/${OWNER}/${REPO}/c
 export const FETCH_TAG_URL = `https://api.github.com/repos/${OWNER}/${REPO}/tags?per_page=1`;
 export const RUNTIME_CONFIG_DOM = "danger-runtime-config";
 
-export const STABILITY_BASE_URL = "https://api.stability.ai";
-
 export const OPENAI_BASE_URL = "https://api.openai.com";
 export const ANTHROPIC_BASE_URL = "https://api.anthropic.com";
 
@@ -51,8 +49,6 @@ export enum Path {
   Masks = "/masks",
   Plugins = "/plugins",
   Auth = "/auth",
-  Sd = "/sd",
-  SdNew = "/sd-new",
   Artifacts = "/artifacts",
   SearchChat = "/search-chat",
   McpMarket = "/mcp-market",
@@ -70,7 +66,6 @@ export enum ApiPath {
   Tencent = "/api/tencent",
   Moonshot = "/api/moonshot",
   Iflytek = "/api/iflytek",
-  Stability = "/api/stability",
   Artifacts = "/api/artifacts",
   XAI = "/api/xai",
   ChatGLM = "/api/chatglm",
@@ -99,7 +94,6 @@ export enum StoreKey {
   Prompt = "prompt-store",
   Update = "chat-update",
   Sync = "sync",
-  SdList = "sd-list",
   Mcp = "mcp-store",
 }
 
@@ -130,7 +124,6 @@ export enum ServiceProvider {
   Alibaba = "Alibaba",
   Tencent = "Tencent",
   Moonshot = "Moonshot",
-  Stability = "Stability",
   Iflytek = "Iflytek",
   XAI = "XAI",
   ChatGLM = "ChatGLM",
@@ -150,7 +143,6 @@ export enum GoogleSafetySettingsThreshold {
 }
 
 export enum ModelProvider {
-  Stability = "Stability",
   GPT = "GPT",
   GeminiPro = "GeminiPro",
   Claude = "Claude",
@@ -168,11 +160,6 @@ export enum ModelProvider {
   OpenRouter = "OpenRouter",
 }
 
-export const Stability = {
-  GeneratePath: "v2beta/stable-image/generate",
-  ExampleEndpoint: "https://api.stability.ai",
-};
-
 export const Anthropic = {
   ChatPath: "v1/messages",
   ChatPath1: "v1/complete",
@@ -182,19 +169,12 @@ export const Anthropic = {
 
 export const OpenaiPath = {
   ChatPath: "v1/chat/completions",
-  SpeechPath: "v1/audio/speech",
-  ImagePath: "v1/images/generations",
-  UsagePath: "dashboard/billing/usage",
-  SubsPath: "dashboard/billing/subscription",
   ListModelPath: "v1/models",
 };
 
 export const Azure = {
   ChatPath: (deployName: string, apiVersion: string) =>
     `deployments/${deployName}/chat/completions?api-version=${apiVersion}`,
-  // https://<your_resource_name>.openai.azure.com/openai/deployments/<your_deployment_name>/images/generations?api-version=<api_version>
-  ImagePath: (deployName: string, apiVersion: string) =>
-    `deployments/${deployName}/images/generations?api-version=${apiVersion}`,
   ExampleEndpoint: "https://{resource-url}/openai",
 };
 
@@ -471,20 +451,6 @@ export const KnowledgeCutOffDate: Record<string, string> = {
   "deepseek-coder": "2024-07",
 };
 
-export const DEFAULT_TTS_ENGINE = "OpenAI-TTS";
-export const DEFAULT_TTS_ENGINES = ["OpenAI-TTS", "Edge-TTS"];
-export const DEFAULT_TTS_MODEL = "tts-1";
-export const DEFAULT_TTS_VOICE = "alloy";
-export const DEFAULT_TTS_MODELS = ["tts-1", "tts-1-hd"];
-export const DEFAULT_TTS_VOICES = [
-  "alloy",
-  "echo",
-  "fable",
-  "onyx",
-  "nova",
-  "shimmer",
-];
-
 export const VISION_MODEL_REGEXES = [
   /vision/,
   /gpt-4o/,
@@ -497,7 +463,6 @@ export const VISION_MODEL_REGEXES = [
   /qwen-vl/,
   /qwen2-vl/,
   /gpt-4-turbo(?!.*preview)/,
-  /^dall-e-3$/,
   /glm-4v/,
   /vl/i,
   /o3/,
@@ -544,7 +509,6 @@ const openaiModels = [
   "gpt-4-vision-preview",
   "gpt-4-turbo-2024-04-09",
   "gpt-4-1106-preview",
-  "dall-e-3",
   "o1-mini",
   "o1-preview",
   "o3-mini",

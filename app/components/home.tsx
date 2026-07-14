@@ -80,10 +80,6 @@ const SearchChat = dynamic(
   },
 );
 
-const Sd = dynamic(async () => (await import("./sd")).Sd, {
-  loading: () => <Loading noLogo />,
-});
-
 const McpMarketPage = dynamic(
   async () => (await import("./mcp-market")).McpMarketPage,
   {
@@ -175,12 +171,9 @@ function Screen() {
   const isArtifact = location.pathname.includes(Path.Artifacts);
   const isHome = location.pathname === Path.Home;
   const isAuth = location.pathname === Path.Auth;
-  const isSd = location.pathname === Path.Sd;
-  const isSdNew = location.pathname === Path.SdNew;
 
   const isMobileScreen = useMobileScreen();
-  const shouldTightBorder =
-    getClientConfig()?.isApp || (config.tightBorder && !isMobileScreen);
+  const shouldTightBorder = config.tightBorder && !isMobileScreen;
 
   useEffect(() => {
     loadAsyncGoogleFont();
@@ -195,8 +188,6 @@ function Screen() {
   }
   const renderContent = () => {
     if (isAuth) return <AuthPage />;
-    if (isSd) return <Sd />;
-    if (isSdNew) return <Sd />;
     return (
       <>
         <SideBar

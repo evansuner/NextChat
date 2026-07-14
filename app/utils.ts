@@ -7,8 +7,6 @@ import {
   REQUEST_TIMEOUT_MS_FOR_THINKING,
   ServiceProvider,
 } from "./constant";
-// import { fetch as tauriFetch, ResponseType } from "@tauri-apps/api/http";
-import { fetch as tauriStreamFetch } from "./utils/stream";
 import { VISION_MODEL_REGEXES, EXCLUDE_VISION_MODEL_REGEXES } from "./constant";
 import { useAccessStore } from "./store";
 import { ModelSize } from "./typing";
@@ -27,11 +25,7 @@ export function trimTopic(topic: string) {
 
 export async function copyToClipboard(text: string) {
   try {
-    if (window.__TAURI__) {
-      window.__TAURI__.writeText(text);
-    } else {
-      await navigator.clipboard.writeText(text);
-    }
+    await navigator.clipboard.writeText(text);
 
     showToast(Locale.Copy.Success);
   } catch (error) {
@@ -51,46 +45,19 @@ export async function copyToClipboard(text: string) {
 }
 
 export async function downloadAs(text: string, filename: string) {
-  if (window.__TAURI__) {
-    const result = await window.__TAURI__.dialog.save({
-      defaultPath: `${filename}`,
-      filters: [
-        {
-          name: `${filename.split(".").pop()} files`,
-          extensions: [`${filename.split(".").pop()}`],
-        },
-        {
-          name: "All Files",
-          extensions: ["*"],
-        },
-      ],
-    });
+  const element = document.createElement("a");
+  element.setAttribute(
+    "href",
+    "data:text/plain;charset=utf-8," + encodeURIComponent(text),
+  );
+  element.setAttribute("download", filename);
 
-    if (result !== null) {
-      try {
-        await window.__TAURI__.fs.writeTextFile(result, text);
-        showToast(Locale.Download.Success);
-      } catch (error) {
-        showToast(Locale.Download.Failed);
-      }
-    } else {
-      showToast(Locale.Download.Failed);
-    }
-  } else {
-    const element = document.createElement("a");
-    element.setAttribute(
-      "href",
-      "data:text/plain;charset=utf-8," + encodeURIComponent(text),
-    );
-    element.setAttribute("download", filename);
+  element.style.display = "none";
+  document.body.appendChild(element);
 
-    element.style.display = "none";
-    document.body.appendChild(element);
+  element.click();
 
-    element.click();
-
-    document.body.removeChild(element);
-  }
+  document.body.removeChild(element);
 }
 
 export function readFromFile() {
@@ -292,15 +259,9 @@ export function isVisionModel(model: string) {
   );
 }
 
-export function isDalle3(model: string) {
-  return "dall-e-3" === model;
-}
-
 export function getTimeoutMSByModel(model: string) {
   model = model.toLowerCase();
   if (
-    model.startsWith("dall-e") ||
-    model.startsWith("dalle") ||
     model.startsWith("o1") ||
     model.startsWith("o3") ||
     model.includes("deepseek-r") ||
@@ -311,9 +272,6 @@ export function getTimeoutMSByModel(model: string) {
 }
 
 export function getModelSizes(model: string): ModelSize[] {
-  if (isDalle3(model)) {
-    return ["1024x1024", "1792x1024", "1024x1792"];
-  }
   if (model.toLowerCase().includes("cogview")) {
     return [
       "1024x1024",
@@ -354,10 +312,7 @@ export function fetch(
   url: string,
   options?: Record<string, unknown>,
 ): Promise<any> {
-  if (window.__TAURI__) {
-    return tauriStreamFetch(url, options);
-  }
-  return window.fetch(url, options);
+  return window.fetch(url, options as RequestInit);
 }
 
 export function adapter(config: Record<string, unknown>) {
@@ -444,29 +399,6 @@ export function getOperationId(operation: {
     operation?.operationId ||
     `${operation.method.toUpperCase()}${operation.path.replaceAll("/", "_")}`
   );
-}
-
-export function clientUpdate() {
-  // this a wild for updating client app
-  return window.__TAURI__?.updater
-    .checkUpdate()
-    .then((updateResult) => {
-      if (updateResult.shouldUpdate) {
-        window.__TAURI__?.updater
-          .installUpdate()
-          .then((result) => {
-            showToast(Locale.Settings.Update.Success);
-          })
-          .catch((e) => {
-            console.error("[Install Update Error]", e);
-            showToast(Locale.Settings.Update.Failed);
-          });
-      }
-    })
-    .catch((e) => {
-      console.error("[Check Update Error]", e);
-      showToast(Locale.Settings.Update.Failed);
-    });
 }
 
 // https://gist.github.com/iwill/a83038623ba4fef6abb9efca87ae9ccb

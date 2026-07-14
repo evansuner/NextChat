@@ -1,15 +1,9 @@
-import { getClientConfig } from "../config/client";
 import { SubmitKey } from "../store/config";
-
-const isApp = !!getClientConfig()?.isApp;
 
 const cn = {
   WIP: "该功能仍在开发中……",
   Error: {
-    Unauthorized: isApp
-      ? `😆 对话遇到了一些问题，不用慌:
-       \\ 点击[这里](/#/settings)修改设置 ⚙️`
-      : `😆 对话遇到了一些问题，不用慌:
+    Unauthorized: `😆 对话遇到了一些问题，不用慌:
           点击[这里](/#/auth)输入访问秘钥 🔑
        `,
   },
@@ -52,8 +46,6 @@ const cn = {
       FullScreen: "全屏",
       RefreshTitle: "刷新标题",
       RefreshToast: "已发送刷新标题请求",
-      Speech: "朗读",
-      StopSpeech: "停止",
     },
     Commands: {
       new: "新建聊天",
@@ -296,16 +288,6 @@ const cn = {
       SubTitle: "当未压缩的历史消息超过该值时，将进行压缩",
     },
 
-    Usage: {
-      Title: "余额查询",
-      SubTitle(used: any, total: any) {
-        return `本月已使用 $${used}，订阅总额 $${total}`;
-      },
-      IsChecking: "正在检查…",
-      Check: "重新检查",
-      NoAccess: "输入 API Key 或访问密码查看余额",
-    },
-
     Access: {
       SaasStart: {
         Title: "使用 NextChat AI",
@@ -503,17 +485,6 @@ const cn = {
           SubTitle: "样例：",
         },
       },
-      Stability: {
-        ApiKey: {
-          Title: "接口密钥",
-          SubTitle: "使用自定义 Stability API Key",
-          Placeholder: "Stability API Key",
-        },
-        Endpoint: {
-          Title: "接口地址",
-          SubTitle: "样例：",
-        },
-      },
       Iflytek: {
         ApiKey: {
           Title: "ApiKey",
@@ -594,26 +565,6 @@ const cn = {
         High: "高",
       },
     },
-    TTS: {
-      Enable: {
-        Title: "启用文本转语音",
-        SubTitle: "启用文本生成语音服务",
-      },
-      Autoplay: {
-        Title: "启用自动朗读",
-        SubTitle: "自动生成语音并播放，需先开启文本转语音开关",
-      },
-      Model: "模型",
-      Engine: "转换引擎",
-      Voice: {
-        Title: "声音",
-        SubTitle: "生成语音时使用的声音",
-      },
-      Speed: {
-        Title: "速度",
-        SubTitle: "生成语音的速度",
-      },
-    },
     Realtime: {
       Enable: {
         Title: "实时聊天",
@@ -645,6 +596,10 @@ const cn = {
       Temperature: {
         Title: "随机性 (temperature)",
         SubTitle: "值越大，回复越随机",
+      },
+      Voice: {
+        Title: "声音",
+        SubTitle: "生成语音时使用的声音",
       },
     },
   },
@@ -822,61 +777,6 @@ const cn = {
     Messages: "消息",
     Topic: "主题",
     Time: "时间",
-  },
-  SdPanel: {
-    Prompt: "画面提示",
-    NegativePrompt: "否定提示",
-    PleaseInput: (name: string) => `请输入${name}`,
-    AspectRatio: "横纵比",
-    ImageStyle: "图像风格",
-    OutFormat: "输出格式",
-    AIModel: "AI模型",
-    ModelVersion: "模型版本",
-    Submit: "提交生成",
-    ParamIsRequired: (name: string) => `${name}不能为空`,
-    Styles: {
-      D3Model: "3D模型",
-      AnalogFilm: "模拟电影",
-      Anime: "动漫",
-      Cinematic: "电影风格",
-      ComicBook: "漫画书",
-      DigitalArt: "数字艺术",
-      Enhance: "增强",
-      FantasyArt: "幻想艺术",
-      Isometric: "等角",
-      LineArt: "线描",
-      LowPoly: "低多边形",
-      ModelingCompound: "建模材料",
-      NeonPunk: "霓虹朋克",
-      Origami: "折纸",
-      Photographic: "摄影",
-      PixelArt: "像素艺术",
-      TileTexture: "贴图",
-    },
-  },
-  Sd: {
-    SubTitle: (count: number) => `共 ${count} 条绘画`,
-    Actions: {
-      Params: "查看参数",
-      Copy: "复制提示词",
-      Delete: "删除",
-      Retry: "重试",
-      ReturnHome: "返回首页",
-      History: "查看历史",
-    },
-    EmptyRecord: "暂无绘画记录",
-    Status: {
-      Name: "状态",
-      Success: "成功",
-      Error: "失败",
-      Wait: "等待中",
-      Running: "运行中",
-    },
-    Danger: {
-      Delete: "确认删除？",
-    },
-    GenerateParams: "生成参数",
-    Detail: "详情",
   },
 };
 

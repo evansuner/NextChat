@@ -46,7 +46,7 @@ import Locale, {
   changeLang,
   getLang,
 } from "../locales";
-import { copyToClipboard, clientUpdate, semverCompare } from "../utils";
+import { copyToClipboard, semverCompare } from "../utils";
 import Link from "next/link";
 import {
   Anthropic,
@@ -61,12 +61,10 @@ import {
   GoogleSafetySettingsThreshold,
   OPENAI_BASE_URL,
   Path,
-  RELEASE_URL,
   STORAGE_KEY,
   ServiceProvider,
   SlotID,
   UPDATE_URL,
-  Stability,
   Iflytek,
   ChatGLM,
   DeepSeek,
@@ -80,12 +78,10 @@ import { InputRange } from "./input-range";
 import { useNavigate } from "react-router-dom";
 import { Avatar } from "./emoji";
 import { AvatarPicker } from "./avatar-picker";
-import { getClientConfig } from "../config/client";
 import { useSyncStore } from "../store/sync";
 import { nanoid } from "nanoid";
 import { useMaskStore } from "../store/mask";
 import { ProviderType } from "../utils/cloud";
-import { TTSConfigList } from "./tts-config";
 import { RealtimeConfigList } from "./realtime-chat/realtime-config";
 
 function EditPromptModal(props: { id: string; onClose: () => void }) {
@@ -192,40 +188,40 @@ function UserPromptModal(props: { onClose?: () => void }) {
           <div className="[border:var(--border-in-light)] rounded-[10px]">
             {prompts.map((v, _) => (
               <div
-                className="flex justify-between p-2.5 [&:not(:last-child)]:[border-bottom:var(--border-in-light)]"
+                className="flex justify-between p-2.5 not-last:[border-bottom:var(--border-in-light)]"
                 key={v.id ?? v.title}
               >
                 <div className="max-w-[calc(100%-100px)]">
-                  <div className="text-sm leading-[2] font-bold">{v.title}</div>
-                  <div className="text-xs one-line">
-                    {v.content}
+                  <div className="text-sm leading-loose font-bold">
+                    {v.title}
                   </div>
+                  <div className="text-xs one-line">{v.content}</div>
                 </div>
 
                 <div className="flex items-center gap-x-0.5">
                   {v.isUser && (
                     <IconButton
                       icon={<ClearIcon />}
-                      className="p-[7px]"
+                      className="p-1.75"
                       onClick={() => promptStore.remove(v.id!)}
                     />
                   )}
                   {v.isUser ? (
                     <IconButton
                       icon={<EditIcon />}
-                      className="p-[7px]"
+                      className="p-1.75"
                       onClick={() => setEditingPromptId(v.id)}
                     />
                   ) : (
                     <IconButton
                       icon={<EyeIcon />}
-                      className="p-[7px]"
+                      className="p-1.75"
                       onClick={() => setEditingPromptId(v.id)}
                     />
                   )}
                   <IconButton
                     icon={<CopyIcon />}
-                    className="p-[7px]"
+                    className="p-1.75"
                     onClick={() => copyToClipboard(v.content)}
                   />
                 </div>
@@ -593,7 +589,7 @@ export function Settings() {
   const currentVersion = updateStore.formatVersion(updateStore.version);
   const remoteId = updateStore.formatVersion(updateStore.remoteVersion);
   const hasNewVersion = semverCompare(currentVersion, remoteId) === -1;
-  const updateUrl = getClientConfig()?.isApp ? RELEASE_URL : UPDATE_URL;
+  const updateUrl = UPDATE_URL;
 
   function checkUpdate(force = false) {
     setCheckingUpdate(true);
@@ -606,35 +602,6 @@ export function Settings() {
   }
 
   const accessStore = useAccessStore();
-  const shouldHideBalanceQuery = useMemo(() => {
-    const isOpenAiUrl = accessStore.openaiUrl.includes(OPENAI_BASE_URL);
-
-    return (
-      accessStore.hideBalanceQuery ||
-      isOpenAiUrl ||
-      accessStore.provider === ServiceProvider.Azure
-    );
-  }, [
-    accessStore.hideBalanceQuery,
-    accessStore.openaiUrl,
-    accessStore.provider,
-  ]);
-
-  const usage = {
-    used: updateStore.used,
-    subscription: updateStore.subscription,
-  };
-  const [loadingUsage, setLoadingUsage] = useState(false);
-  function checkUsage(force = false) {
-    if (shouldHideBalanceQuery) {
-      return;
-    }
-
-    setLoadingUsage(true);
-    updateStore.updateUsage(force).finally(() => {
-      setLoadingUsage(false);
-    });
-  }
 
   const enabledAccessControl = useMemo(
     () => accessStore.enabledAccessControl(),
@@ -647,11 +614,9 @@ export function Settings() {
   const customCount = promptStore.getUserPrompts().length ?? 0;
   const [shouldShowPromptModal, setShowPromptModal] = useState(false);
 
-  const showUsage = accessStore.isAuthorized();
   useEffect(() => {
     // checks per minutes
     checkUpdate();
-    showUsage && checkUsage();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -661,12 +626,6 @@ export function Settings() {
         navigate(Path.Home);
       }
     };
-    if (clientConfig?.isApp) {
-      // Force to set custom endpoint to true if it's app
-      accessStore.update((state) => {
-        state.useCustomConfig = true;
-      });
-    }
     document.addEventListener("keydown", keydownEvent);
     return () => {
       document.removeEventListener("keydown", keydownEvent);
@@ -674,8 +633,7 @@ export function Settings() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const clientConfig = useMemo(() => getClientConfig(), []);
-  const showAccessCode = enabledAccessControl && !clientConfig?.isApp;
+  const showAccessCode = enabledAccessControl;
 
   const accessCodeComponent = showAccessCode && (
     <ListItem
@@ -695,24 +653,23 @@ export function Settings() {
     </ListItem>
   );
 
-  const useCustomConfigComponent = // Conditionally render the following ListItem based on clientConfig.isApp
-    !clientConfig?.isApp && ( // only show if isApp is false
-      <ListItem
-        title={Locale.Settings.Access.CustomEndpoint.Title}
-        subTitle={Locale.Settings.Access.CustomEndpoint.SubTitle}
-      >
-        <input
-          aria-label={Locale.Settings.Access.CustomEndpoint.Title}
-          type="checkbox"
-          checked={accessStore.useCustomConfig}
-          onChange={(e) =>
-            accessStore.update(
-              (access) => (access.useCustomConfig = e.currentTarget.checked),
-            )
-          }
-        ></input>
-      </ListItem>
-    );
+  const useCustomConfigComponent = (
+    <ListItem
+      title={Locale.Settings.Access.CustomEndpoint.Title}
+      subTitle={Locale.Settings.Access.CustomEndpoint.SubTitle}
+    >
+      <input
+        aria-label={Locale.Settings.Access.CustomEndpoint.Title}
+        type="checkbox"
+        checked={accessStore.useCustomConfig}
+        onChange={(e) =>
+          accessStore.update(
+            (access) => (access.useCustomConfig = e.currentTarget.checked),
+          )
+        }
+      ></input>
+    </ListItem>
+  );
 
   const openAIConfigComponent = accessStore.provider ===
     ServiceProvider.OpenAI && (
@@ -1337,46 +1294,6 @@ export function Settings() {
     </>
   );
 
-  const stabilityConfigComponent = accessStore.provider ===
-    ServiceProvider.Stability && (
-    <>
-      <ListItem
-        title={Locale.Settings.Access.Stability.Endpoint.Title}
-        subTitle={
-          Locale.Settings.Access.Stability.Endpoint.SubTitle +
-          Stability.ExampleEndpoint
-        }
-      >
-        <input
-          aria-label={Locale.Settings.Access.Stability.Endpoint.Title}
-          type="text"
-          value={accessStore.stabilityUrl}
-          placeholder={Stability.ExampleEndpoint}
-          onChange={(e) =>
-            accessStore.update(
-              (access) => (access.stabilityUrl = e.currentTarget.value),
-            )
-          }
-        ></input>
-      </ListItem>
-      <ListItem
-        title={Locale.Settings.Access.Stability.ApiKey.Title}
-        subTitle={Locale.Settings.Access.Stability.ApiKey.SubTitle}
-      >
-        <PasswordInput
-          aria-label={Locale.Settings.Access.Stability.ApiKey.Title}
-          value={accessStore.stabilityApiKey}
-          type="text"
-          placeholder={Locale.Settings.Access.Stability.ApiKey.Placeholder}
-          onChange={(e) => {
-            accessStore.update(
-              (access) => (access.stabilityApiKey = e.currentTarget.value),
-            );
-          }}
-        />
-      </ListItem>
-    </>
-  );
   const lflytekConfigComponent = accessStore.provider ===
     ServiceProvider.Iflytek && (
     <>
@@ -1518,7 +1435,7 @@ export function Settings() {
 
   return (
     <ErrorBoundary>
-      <div className="window-header" data-tauri-drag-region>
+      <div className="window-header">
         <div className="window-header-title">
           <div className="window-header-main-title">
             {Locale.Settings.Title}
@@ -1558,7 +1475,7 @@ export function Settings() {
               <div
                 aria-label={Locale.Settings.Avatar}
                 tabIndex={0}
-                className="cursor-pointer relative z-[1]"
+                className="cursor-pointer relative z-1"
                 onClick={() => {
                   setShowEmojiPicker(!showEmojiPicker);
                 }}
@@ -1875,7 +1792,6 @@ export function Settings() {
                   {tencentConfigComponent}
                   {moonshotConfigComponent}
                   {deepseekConfigComponent}
-                  {stabilityConfigComponent}
                   {lflytekConfigComponent}
                   {XAIConfigComponent}
                   {chatglmConfigComponent}
@@ -1886,32 +1802,6 @@ export function Settings() {
               )}
             </>
           )}
-
-          {!shouldHideBalanceQuery && !clientConfig?.isApp ? (
-            <ListItem
-              title={Locale.Settings.Usage.Title}
-              subTitle={
-                showUsage
-                  ? loadingUsage
-                    ? Locale.Settings.Usage.IsChecking
-                    : Locale.Settings.Usage.SubTitle(
-                        usage?.used ?? "[?]",
-                        usage?.subscription ?? "[?]",
-                      )
-                  : Locale.Settings.Usage.NoAccess
-              }
-            >
-              {!showUsage || loadingUsage ? (
-                <div />
-              ) : (
-                <IconButton
-                  icon={<ResetIcon></ResetIcon>}
-                  text={Locale.Settings.Usage.Check}
-                  onClick={() => checkUsage(true)}
-                />
-              )}
-            </ListItem>
-          ) : null}
 
           <ListItem
             title={Locale.Settings.Access.CustomModel.Title}
@@ -1956,16 +1846,6 @@ export function Settings() {
               config.update(
                 (config) => (config.realtimeConfig = realtimeConfig),
               );
-            }}
-          />
-        </List>
-        <List>
-          <TTSConfigList
-            ttsConfig={config.ttsConfig}
-            updateConfig={(updater) => {
-              const ttsConfig = { ...config.ttsConfig };
-              updater(ttsConfig);
-              config.update((config) => (config.ttsConfig = ttsConfig));
             }}
           />
         </List>

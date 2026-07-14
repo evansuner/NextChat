@@ -33,7 +33,6 @@ import { isMcpEnabled } from "../mcp/actions";
 
 const DISCOVERY = [
   { name: Locale.Plugin.Name, path: Path.Plugins },
-  { name: "Stable Diffusion", path: Path.Sd },
   { name: Locale.SearchChat.Page.Title, path: Path.SearchChat },
 ];
 
@@ -149,7 +148,7 @@ export function SideBarContainer(props: {
   return (
     <div
       className={clsx(
-        "group/sidebar relative top-0 box-border flex w-[var(--sidebar-width)] flex-col bg-second p-5 [box-shadow:inset_-2px_0px_2px_0px_rgb(0,0,0,0.05)] [transition:width_ease_0.05s] max-[600px]:absolute max-[600px]:left-[-100%] max-[600px]:z-[1000] max-[600px]:h-[var(--full-height)] max-[600px]:shadow-none max-[600px]:[transition:all_ease_0.3s]",
+        "group/sidebar relative top-0 box-border flex w-(--sidebar-width) flex-col bg-second p-5 [box-shadow:inset_-2px_0px_2px_0px_rgb(0,0,0,0.05)] [transition:width_ease_0.05s] max-[600px]:absolute max-[600px]:-left-full max-[600px]:z-1000 max-[600px]:h-(--full-height) max-[600px]:shadow-none max-[600px]:[transition:all_ease_0.3s]",
         className,
       )}
       data-narrow={shouldNarrow ? "true" : undefined}
@@ -160,7 +159,7 @@ export function SideBarContainer(props: {
     >
       {children}
       <div
-        className="absolute top-0 right-0 flex h-full w-[14px] cursor-ew-resize items-center bg-[rgba(0,0,0,0)] [transition:all_ease_0.3s] [&_svg]:ml-[-2px] [&_svg]:opacity-0 group-hover/sidebar:bg-[rgba(0,0,0,0.01)] group-hover/sidebar:[&_svg]:opacity-20 group-active/sidebar:bg-[rgba(0,0,0,0.01)] group-active/sidebar:[&_svg]:opacity-20"
+        className="absolute top-0 right-0 flex h-full w-3.5 cursor-ew-resize items-center bg-[rgba(0,0,0,0)] [transition:all_ease_0.3s] [&_svg]:-ml-0.5 [&_svg]:opacity-0 group-hover/sidebar:bg-[rgba(0,0,0,0.01)] group-hover/sidebar:[&_svg]:opacity-20 group-active/sidebar:bg-[rgba(0,0,0,0.01)] group-active/sidebar:[&_svg]:opacity-20"
         onPointerDown={(e) => onDragStart(e as any)}
       >
         <DragIcon />
@@ -184,16 +183,12 @@ export function SideBarHeader(props: {
           "relative flex items-center pt-5 pb-5",
           shouldNarrow ? "justify-center" : "justify-between",
         )}
-        data-tauri-drag-region
       >
         <div className="inline-flex flex-col">
-          <div
-            className="text-[20px] font-bold [animation:slide-in_ease_0.3s] group-data-[narrow=true]/sidebar:hidden"
-            data-tauri-drag-region
-          >
+          <div className="text-[20px] font-bold animate-[slide-in_ease_0.3s] group-data-[narrow=true]/sidebar:hidden">
             {title}
           </div>
-          <div className="text-[12px] font-normal [animation:slide-in_ease_0.3s] group-data-[narrow=true]/sidebar:hidden">
+          <div className="text-[12px] font-normal animate-[slide-in_ease_0.3s] group-data-[narrow=true]/sidebar:hidden">
             {subTitle}
           </div>
         </div>
@@ -217,10 +212,7 @@ export function SideBarBody(props: {
 }) {
   const { onClick, children } = props;
   return (
-    <div
-      className="flex-1 overflow-auto overflow-x-hidden"
-      onClick={onClick}
-    >
+    <div className="flex-1 overflow-auto overflow-x-hidden" onClick={onClick}>
       {children}
     </div>
   );
@@ -280,7 +272,7 @@ export function SideBar(props: { className?: string }) {
             <IconButton
               icon={<McpIcon />}
               text={shouldNarrow ? undefined : Locale.Mcp.Name}
-              className="grow [&:not(:last-child)]:mr-[10px] group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mr-0 group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mb-[10px]"
+              className="grow not-last:mr-2.5 group-data-[narrow=true]/sidebar:not-last:mr-0 group-data-[narrow=true]/sidebar:not-last:mb-2.5"
               onClick={() => {
                 navigate(Path.McpMarket, { state: { fromHome: true } });
               }}
@@ -290,7 +282,7 @@ export function SideBar(props: { className?: string }) {
           <IconButton
             icon={<DiscoveryIcon />}
             text={shouldNarrow ? undefined : Locale.Discovery.Name}
-            className="grow [&:not(:last-child)]:mr-[10px] group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mr-0 group-data-[narrow=true]/sidebar:[&:not(:last-child)]:mb-[10px]"
+            className="grow not-last:mr-2.5 group-data-[narrow=true]/sidebar:not-last:mr-0 group-data-[narrow=true]/sidebar:not-last:mb-2.5"
             onClick={() => setShowDiscoverySelector(true)}
             shadow
           />
@@ -326,7 +318,7 @@ export function SideBar(props: { className?: string }) {
           <>
             <div
               className={clsx(
-                "[&:not(:last-child)]:mr-[15px] group-data-[narrow=true]/sidebar:mr-0 group-data-[narrow=true]/sidebar:mt-[15px]",
+                "not-last:mr-3.75 group-data-[narrow=true]/sidebar:mr-0 group-data-[narrow=true]/sidebar:mt-3.75",
                 "hidden max-[600px]:block",
               )}
             >
@@ -339,7 +331,7 @@ export function SideBar(props: { className?: string }) {
                 }}
               />
             </div>
-            <div className="[&:not(:last-child)]:mr-[15px] group-data-[narrow=true]/sidebar:mr-0 group-data-[narrow=true]/sidebar:mt-[15px]">
+            <div className="not-last:mr-3.75 group-data-[narrow=true]/sidebar:mr-0 group-data-[narrow=true]/sidebar:mt-3.75">
               <Link to={Path.Settings}>
                 <IconButton
                   aria={Locale.Settings.Title}

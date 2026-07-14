@@ -1,16 +1,11 @@
-import { getClientConfig } from "../config/client";
 import { SubmitKey } from "../store/config";
 import { LocaleType } from "./index";
 // if you are adding a new translation, please use PartialLocaleType instead of LocaleType
 
-const isApp = !!getClientConfig()?.isApp;
 const en: LocaleType = {
   WIP: "Coming Soon...",
   Error: {
-    Unauthorized: isApp
-      ? `😆 Oops, there's an issue. No worries:
-     \\ 2️⃣ Want to use your own OpenAI resources? [Click here](/#/settings) to change settings ⚙️`
-      : `😆 Oops, there's an issue. Let's fix it:
+    Unauthorized: `😆 Oops, there's an issue. Let's fix it:
      \ 2️⃣ Using a private setup? [Click here](/#/auth) to enter your key 🔑
      \ 3️⃣ Want to use your own OpenAI resources? [Click here](/#/settings) to change settings ⚙️
      `,
@@ -54,8 +49,6 @@ const en: LocaleType = {
       FullScreen: "FullScreen",
       RefreshTitle: "Refresh Title",
       RefreshToast: "Title refresh request sent",
-      Speech: "Play",
-      StopSpeech: "Stop",
     },
     Commands: {
       new: "Start a new chat",
@@ -301,15 +294,6 @@ const en: LocaleType = {
         "Will compress if uncompressed messages length exceeds the value",
     },
 
-    Usage: {
-      Title: "Account Balance",
-      SubTitle(used: any, total: any) {
-        return `Used this month $${used}, subscription $${total}`;
-      },
-      IsChecking: "Checking...",
-      Check: "Check",
-      NoAccess: "Enter API Key to check balance",
-    },
     Access: {
       SaasStart: {
         Title: "Use NextChat AI",
@@ -488,17 +472,6 @@ const en: LocaleType = {
           SubTitle: "Example: ",
         },
       },
-      Stability: {
-        ApiKey: {
-          Title: "Stability API Key",
-          SubTitle: "Use a custom Stability API Key",
-          Placeholder: "Stability API Key",
-        },
-        Endpoint: {
-          Title: "Endpoint Address",
-          SubTitle: "Example: ",
-        },
-      },
       OpenRouter: {
         ApiKey: {
           Title: "OpenRouter API Key",
@@ -602,27 +575,6 @@ const en: LocaleType = {
         High: "High",
       },
     },
-    TTS: {
-      Enable: {
-        Title: "Enable TTS",
-        SubTitle: "Enable text-to-speech service",
-      },
-      Autoplay: {
-        Title: "Enable Autoplay",
-        SubTitle:
-          "Automatically generate speech and play, you need to enable the text-to-speech switch first",
-      },
-      Model: "Model",
-      Voice: {
-        Title: "Voice",
-        SubTitle: "The voice to use when generating the audio",
-      },
-      Speed: {
-        Title: "Speed",
-        SubTitle: "The speed of the generated audio",
-      },
-      Engine: "TTS Engine",
-    },
     Realtime: {
       Enable: {
         Title: "Realtime Chat",
@@ -654,6 +606,10 @@ const en: LocaleType = {
       Temperature: {
         Title: "Randomness (temperature)",
         SubTitle: "Higher values result in more random responses",
+      },
+      Voice: {
+        Title: "Voice",
+        SubTitle: "The voice to use when generating the audio",
       },
     },
   },
@@ -833,61 +789,6 @@ const en: LocaleType = {
   URLCommand: {
     Code: "Detected access code from url, confirm to apply? ",
     Settings: "Detected settings from url, confirm to apply?",
-  },
-  SdPanel: {
-    Prompt: "Prompt",
-    NegativePrompt: "Negative Prompt",
-    PleaseInput: (name: string) => `Please input ${name}`,
-    AspectRatio: "Aspect Ratio",
-    ImageStyle: "Image Style",
-    OutFormat: "Output Format",
-    AIModel: "AI Model",
-    ModelVersion: "Model Version",
-    Submit: "Submit",
-    ParamIsRequired: (name: string) => `${name} is required`,
-    Styles: {
-      D3Model: "3d-model",
-      AnalogFilm: "analog-film",
-      Anime: "anime",
-      Cinematic: "cinematic",
-      ComicBook: "comic-book",
-      DigitalArt: "digital-art",
-      Enhance: "enhance",
-      FantasyArt: "fantasy-art",
-      Isometric: "isometric",
-      LineArt: "line-art",
-      LowPoly: "low-poly",
-      ModelingCompound: "modeling-compound",
-      NeonPunk: "neon-punk",
-      Origami: "origami",
-      Photographic: "photographic",
-      PixelArt: "pixel-art",
-      TileTexture: "tile-texture",
-    },
-  },
-  Sd: {
-    SubTitle: (count: number) => `${count} images`,
-    Actions: {
-      Params: "See Params",
-      Copy: "Copy Prompt",
-      Delete: "Delete",
-      Retry: "Retry",
-      ReturnHome: "Return Home",
-      History: "History",
-    },
-    EmptyRecord: "No images yet",
-    Status: {
-      Name: "Status",
-      Success: "Success",
-      Error: "Error",
-      Wait: "Waiting",
-      Running: "Running",
-    },
-    Danger: {
-      Delete: "Confirm to delete?",
-    },
-    GenerateParams: "Generate Params",
-    Detail: "Detail",
   },
 };
 

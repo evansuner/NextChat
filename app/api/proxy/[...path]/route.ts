@@ -1,16 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSideConfig } from "@/app/config/server";
 
-export async function handle(
+/**
+ * Generic pass-through proxy used by the plugin system. The client sends the
+ * real upstream base in the `x-base-url` header and the sub-path in the route;
+ * this forwards the request and streams the response back. (Formerly the
+ * `default` branch of the per-provider `[provider]/[...path]` dispatcher.)
+ */
+async function handle(
   req: NextRequest,
   { params }: { params: { path: string[] } },
 ) {
-  console.log("[Proxy Route] params ", params);
-
   if (req.method === "OPTIONS") {
     return NextResponse.json({ body: "OK" }, { status: 200 });
   }
-  const serverConfig = getServerSideConfig();
 
   // remove path params from searchParams
   req.nextUrl.searchParams.delete("path");
@@ -33,24 +35,12 @@ export async function handle(
       return true;
     }),
   );
-  // if dalle3 use openai api key
-    const baseUrl = req.headers.get("x-base-url");
-    if (baseUrl?.includes("api.openai.com")) {
-      if (!serverConfig.apiKey) {
-        return NextResponse.json(
-          { error: "OpenAI API key not configured" },
-          { status: 500 },
-        );
-      }
-      headers.set("Authorization", `Bearer ${serverConfig.apiKey}`);
-    }
 
   const controller = new AbortController();
   const fetchOptions: RequestInit = {
     headers,
     method: req.method,
     body: req.body,
-    // to fix #2485: https://stackoverflow.com/questions/55920957/cloudflare-worker-typeerror-one-time-use-body
     redirect: "manual",
     // @ts-ignore
     duplex: "half",
@@ -71,11 +61,7 @@ export async function handle(
     newHeaders.delete("www-authenticate");
     // to disable nginx buffering
     newHeaders.set("X-Accel-Buffering", "no");
-
-    // The latest version of the OpenAI API forced the content-encoding to be "br" in json response
-    // So if the streaming is disabled, we need to remove the content-encoding header
-    // Because Vercel uses gzip to compress the response, if we don't remove the content-encoding header
-    // The browser will try to decode the response with brotli and fail
+    // remove brotli content-encoding so Vercel's gzip does not double-encode
     newHeaders.delete("content-encoding");
 
     return new Response(res.body, {
@@ -87,3 +73,12 @@ export async function handle(
     clearTimeout(timeoutId);
   }
 }
+
+export const GET = handle;
+export const POST = handle;
+export const PUT = handle;
+export const PATCH = handle;
+export const DELETE = handle;
+export const OPTIONS = handle;
+
+export const runtime = "edge";
