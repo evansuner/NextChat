@@ -340,7 +340,7 @@ const en: LocaleType = {
           SubTitle: "Example: ",
         },
 
-        ApiVerion: {
+        ApiVersion: {
           Title: "Azure Api Version",
           SubTitle: "Check your api version from azure console",
         },
@@ -358,7 +358,7 @@ const en: LocaleType = {
           SubTitle: "Example: ",
         },
 
-        ApiVerion: {
+        ApiVersion: {
           Title: "API Version (claude api version)",
           SubTitle: "Select and input a specific API version",
         },
@@ -501,7 +501,7 @@ const en: LocaleType = {
       },
       CustomModel: {
         Title: "Custom Models",
-        SubTitle: "Custom model options, seperated by comma",
+        SubTitle: "Custom model options, separated by comma",
       },
       Google: {
         ApiKey: {

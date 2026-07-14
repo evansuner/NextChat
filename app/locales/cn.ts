@@ -333,7 +333,7 @@ const cn = {
           SubTitle: "样例：",
         },
 
-        ApiVerion: {
+        ApiVersion: {
           Title: "接口版本 (azure api version)",
           SubTitle: "选择指定的部分版本",
         },
@@ -350,7 +350,7 @@ const cn = {
           SubTitle: "样例：",
         },
 
-        ApiVerion: {
+        ApiVersion: {
           Title: "接口版本 (claude api version)",
           SubTitle: "选择一个特定的 API 版本输入",
         },

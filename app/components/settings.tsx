@@ -748,11 +748,11 @@ export function Settings() {
         />
       </ListItem>
       <ListItem
-        title={Locale.Settings.Access.Azure.ApiVerion.Title}
-        subTitle={Locale.Settings.Access.Azure.ApiVerion.SubTitle}
+        title={Locale.Settings.Access.Azure.ApiVersion.Title}
+        subTitle={Locale.Settings.Access.Azure.ApiVersion.SubTitle}
       >
         <input
-          aria-label={Locale.Settings.Access.Azure.ApiVerion.Title}
+          aria-label={Locale.Settings.Access.Azure.ApiVersion.Title}
           type="text"
           value={accessStore.azureApiVersion}
           placeholder="2023-08-01-preview"
@@ -884,14 +884,14 @@ export function Settings() {
         />
       </ListItem>
       <ListItem
-        title={Locale.Settings.Access.Anthropic.ApiVerion.Title}
-        subTitle={Locale.Settings.Access.Anthropic.ApiVerion.SubTitle}
+        title={Locale.Settings.Access.Anthropic.ApiVersion.Title}
+        subTitle={Locale.Settings.Access.Anthropic.ApiVersion.SubTitle}
       >
         <input
-          aria-label={Locale.Settings.Access.Anthropic.ApiVerion.Title}
+          aria-label={Locale.Settings.Access.Anthropic.ApiVersion.Title}
           type="text"
           value={accessStore.anthropicApiVersion}
-          placeholder={Anthropic.Vision}
+          placeholder={Anthropic.Version}
           onChange={(e) =>
             accessStore.update(
               (access) => (access.anthropicApiVersion = e.currentTarget.value),
