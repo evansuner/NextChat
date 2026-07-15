@@ -1,4 +1,4 @@
-import ReactMarkdown from "react-markdown";
+import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import "katex/dist/katex.min.css";
 import RemarkMath from "remark-math";
 import RemarkBreaks from "remark-breaks";
@@ -273,6 +273,26 @@ function tryWrapHtmlCode(text: string) {
     );
 }
 
+/**
+ * Renders a markdown image. Clicking the image opens a preview modal (which
+ * provides a PNG download button). Model-generated images (e.g. Gemini image
+ * models) arrive as `data:image/...` URLs and render inline here.
+ */
+function MarkdownImage(props: React.ImgHTMLAttributes<HTMLImageElement>) {
+  const src = typeof props.src === "string" ? props.src : "";
+
+  if (!src) return <img {...props} />;
+
+  return (
+    <img
+      {...props}
+      style={{ maxWidth: "100%", cursor: "pointer", ...props.style }}
+      title={Locale.Export.Image.Modal}
+      onClick={() => showImageModal(src, true)}
+    />
+  );
+}
+
 function _MarkDownContent(props: { content: string }) {
   const escapedContent = useMemo(() => {
     return tryWrapHtmlCode(escapeBrackets(props.content));
@@ -281,6 +301,9 @@ function _MarkDownContent(props: { content: string }) {
   return (
     <ReactMarkdown
       remarkPlugins={[RemarkMath, RemarkGfm, RemarkBreaks]}
+      urlTransform={(url) =>
+        url.startsWith("data:image/") ? url : defaultUrlTransform(url)
+      }
       rehypePlugins={[
         RehypeKatex,
         [
@@ -295,6 +318,7 @@ function _MarkDownContent(props: { content: string }) {
         pre: PreCode,
         code: CustomCode,
         p: (pProps) => <p {...pProps} dir="auto" />,
+        img: (imgProps) => <MarkdownImage {...imgProps} />,
         a: (aProps) => {
           const href = aProps.href || "";
           if (/\.(aac|mp3|opus|wav)$/.test(href)) {
@@ -312,7 +336,7 @@ function _MarkDownContent(props: { content: string }) {
             );
           }
           const isInternal = /^\/#/i.test(href);
-          const target = isInternal ? "_self" : aProps.target ?? "_blank";
+          const target = isInternal ? "_self" : (aProps.target ?? "_blank");
           return <a {...aProps} target={target} />;
         },
       }}

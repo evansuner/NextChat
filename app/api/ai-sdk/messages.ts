@@ -35,7 +35,23 @@ export function toModelMessages(
     if (role === "user") {
       const parts = m.content.map((part) => {
         if (part.type === "image_url" && part.image_url?.url) {
-          return { type: "image" as const, image: part.image_url.url };
+          const url = part.image_url.url;
+          // AI SDK v5 uses `file` parts (the old `image` part is deprecated).
+          const dataUrl = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.*)$/s.exec(
+            url,
+          );
+          if (dataUrl) {
+            return {
+              type: "file" as const,
+              mediaType: dataUrl[1],
+              data: dataUrl[2],
+            };
+          }
+          return {
+            type: "file" as const,
+            mediaType: "image/png",
+            data: /^https?:\/\//i.test(url) ? new URL(url) : url,
+          };
         }
         return { type: "text" as const, text: part.text ?? "" };
       });

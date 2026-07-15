@@ -49,6 +49,7 @@ const en: LocaleType = {
       FullScreen: "FullScreen",
       RefreshTitle: "Refresh Title",
       RefreshToast: "Title refresh request sent",
+      Download: "Download",
     },
     Commands: {
       new: "Start a new chat",

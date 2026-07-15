@@ -8,6 +8,7 @@ import ConfirmIcon from "../icons/confirm.svg";
 import CancelIcon from "../icons/cancel.svg";
 import MaxIcon from "../icons/max.svg";
 import MinIcon from "../icons/min.svg";
+import DownloadIcon from "../icons/download.svg";
 
 import Locale from "../locales";
 
@@ -486,6 +487,43 @@ export function showPrompt(content: any, value = "", rows = 3) {
   });
 }
 
+/**
+ * Download an image (any source format) as a PNG file. PNG data URLs are saved
+ * directly; other formats are re-encoded to PNG via a canvas.
+ */
+async function downloadImageAsPng(src: string) {
+  const filename = `image-${Date.now()}.png`;
+  const triggerDownload = (href: string) => {
+    const a = document.createElement("a");
+    a.href = href;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  };
+
+  if (/^data:image\/png/i.test(src)) {
+    triggerDownload(src);
+    return;
+  }
+
+  try {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = src;
+    await img.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = img.naturalWidth;
+    canvas.height = img.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("canvas context unavailable");
+    ctx.drawImage(img, 0, 0);
+    triggerDownload(canvas.toDataURL("image/png"));
+  } catch {
+    triggerDownload(src);
+  }
+}
+
 export function showImageModal(
   img: string,
   defaultMax?: boolean,
@@ -495,6 +533,15 @@ export function showImageModal(
   showModal({
     title: Locale.Export.Image.Modal,
     defaultMax: defaultMax,
+    actions: [
+      <IconButton
+        key="download"
+        text={Locale.Chat.Actions.Download}
+        icon={<DownloadIcon />}
+        bordered
+        onClick={() => downloadImageAsPng(img)}
+      />,
+    ],
     children: (
       <div style={{ display: "flex", justifyContent: "center", ...boxStyle }}>
         <img
@@ -527,8 +574,8 @@ export function Selector<T>(props: {
     Array.isArray(props.defaultSelectedValue)
       ? props.defaultSelectedValue
       : props.defaultSelectedValue !== undefined
-      ? [props.defaultSelectedValue]
-      : [],
+        ? [props.defaultSelectedValue]
+        : [],
   );
 
   const handleSelection = (e: MouseEvent, value: T) => {

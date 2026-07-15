@@ -73,7 +73,10 @@ import {
   showPlugins,
 } from "../utils";
 
-import { uploadImage as uploadImageRemote } from "@/app/utils/chat";
+import {
+  preProcessImageContent,
+  uploadImage as uploadImageRemote,
+} from "@/app/utils/chat";
 
 import dynamic from "next/dynamic";
 
@@ -1009,6 +1012,26 @@ function _Chat() {
           const currentSession = store.currentSession();
           const modelConfig = currentSession.mask.modelConfig;
           const messages = await store.getMessagesForSend();
+          // Resolve client-only `/api/cache/...` image URLs (served by the
+          // service worker) into base64 data URLs so the server-side AI SDK can
+          // inline them — it cannot download localhost/private-host URLs.
+          const processedMessages = await Promise.all(
+            messages.map(async (m) => {
+              const content = await preProcessImageContent(m.content);
+              // Strip inline base64 image data URLs from text content (e.g.
+              // assistant-generated images rendered as markdown) so these large
+              // blobs are not resent as text on later turns and blow past the
+              // model's input token limit.
+              const cleaned =
+                typeof content === "string"
+                  ? content.replace(
+                      /!\[[^\]]*\]\(\s*data:image\/[^)]*\)/g,
+                      "[image]",
+                    )
+                  : content;
+              return { ...m, content: cleaned };
+            }),
+          );
           const providerName =
             modelConfig.providerName as unknown as ServiceProvider;
           return {
@@ -1016,7 +1039,7 @@ function _Chat() {
             body: {
               provider: providerName,
               model: modelConfig.model,
-              messages,
+              messages: processedMessages,
               config: {
                 temperature: modelConfig.temperature,
                 top_p: modelConfig.top_p,
