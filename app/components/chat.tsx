@@ -83,7 +83,7 @@ import dynamic from "next/dynamic";
 
 import { ChatControllerPool } from "../client/controller";
 import { DalleQuality, DalleStyle, ModelSize } from "../typing";
-import { Prompt, usePromptStore } from "../store/prompt";
+import { Prompt, SearchService, usePromptStore } from "../store/prompt";
 import Locale from "../locales";
 
 import { IconButton } from "./button";
@@ -116,13 +116,12 @@ import { prettyObject } from "../utils/format";
 import { ExportMessageModal } from "./exporter";
 import { getClientConfig } from "../config/client";
 import { useAllModels } from "../utils/hooks";
-import { ClientApi, MultimodalContent } from "../client/api";
+import type { ClientApi, MultimodalContent } from "../client/api";
 import { createTTSPlayer } from "../utils/audio";
 import { MsEdgeTTS, OUTPUT_FORMAT } from "../utils/ms_edge_tts";
 
 import { isEmpty } from "lodash-es";
 import { getModelProvider } from "../utils/model";
-import { RealtimeChat } from "@/app/components/realtime-chat";
 import clsx from "clsx";
 import { getAvailableClientsCount, isMcpEnabled } from "../mcp/actions";
 
@@ -133,6 +132,14 @@ const ttsPlayer = createTTSPlayer();
 const Markdown = dynamic(async () => (await import("./markdown")).Markdown, {
   loading: () => <LoadingIcon />,
 });
+
+// Realtime audio pulls in the WebSocket SDK and audio processing code. It is
+// rendered only after the user opens the side panel, so defer both download and
+// execution until then.
+const RealtimeChat = dynamic(
+  async () => (await import("@/app/components/realtime-chat")).RealtimeChat,
+  { ssr: false },
+);
 
 const MCPAction = () => {
   const navigate = useNavigate();
@@ -1097,7 +1104,13 @@ function _Chat() {
       // check if need to trigger auto completion
       if (text.startsWith("/")) {
         let searchText = text.slice(1);
-        onSearch(searchText);
+        if (SearchService.ready) {
+          onSearch(searchText);
+        } else {
+          void SearchService.loadBuiltinPrompts().then(() =>
+            onSearch(searchText),
+          );
+        }
       }
     }
   };
@@ -1292,8 +1305,8 @@ function _Chat() {
       ttsPlayer.stop();
       setSpeechStatus(false);
     } else {
-      var api: ClientApi;
-      api = new ClientApi(ModelProvider.GPT);
+      const { ClientApi } = await import("../client/api");
+      const api: ClientApi = new ClientApi(ModelProvider.GPT);
       const config = useAppConfig.getState();
       setSpeechLoading(true);
       ttsPlayer.init();

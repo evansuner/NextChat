@@ -26,10 +26,8 @@ import { SideBar } from "./sidebar";
 import { useAppConfig } from "../store/config";
 import { AuthPage } from "./auth";
 import { getClientConfig } from "../config/client";
-import { type ClientApi, getClientApi } from "../client/api";
-import { useAccessStore } from "../store";
+import { useAccessStore } from "../store/access";
 import clsx from "clsx";
-import { initializeMcpSystem, isMcpEnabled } from "../mcp/actions";
 
 export function Loading(props: { noLogo?: boolean }) {
   return (
@@ -52,6 +50,10 @@ const Settings = dynamic(async () => (await import("./settings")).Settings, {
 
 const Chat = dynamic(async () => (await import("./chat")).Chat, {
   loading: () => <Loading noLogo />,
+  // The chat view is the largest client feature. Rendering a lightweight
+  // fallback lets the surrounding app shell paint before its dependencies are
+  // fetched and evaluated.
+  ssr: false,
 });
 
 const NewChat = dynamic(async () => (await import("./new-chat")).NewChat, {
@@ -126,16 +128,6 @@ function useHtmlLang() {
   }, []);
 }
 
-const useHasHydrated = () => {
-  const [hasHydrated, setHasHydrated] = useState<boolean>(false);
-
-  useEffect(() => {
-    setHasHydrated(true);
-  }, []);
-
-  return hasHydrated;
-};
-
 const loadAsyncGoogleFont = () => {
   const linkEl = document.createElement("link");
   const proxyFontUrl = "/google-fonts";
@@ -150,6 +142,34 @@ const loadAsyncGoogleFont = () => {
     "&display=swap";
   document.head.appendChild(linkEl);
 };
+
+function useHasMounted() {
+  const [hasMounted, setHasMounted] = useState(false);
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  return hasMounted;
+}
+
+// HashRouter depends on browser APIs and cannot render on the server. Render a
+// lightweight shell instead of the former full-screen spinner, so users see
+// the app frame as soon as the HTML arrives.
+function AppShellSkeleton() {
+  return (
+    <div className={styles.container} aria-busy="true">
+      <aside className={styles.sidebar}>
+        <BotIcon />
+      </aside>
+      <main className={styles["window-content"]}>
+        <div className={styles["loading-content"]}>
+          <LoadingIcon />
+        </div>
+      </main>
+    </div>
+  );
+}
 
 export function WindowContent(props: { children: React.ReactNode }) {
   return (
@@ -225,13 +245,24 @@ function Screen() {
 export function useLoadData() {
   const config = useAppConfig();
 
-  const api: ClientApi = getClientApi(config.modelConfig.providerName);
-
   useEffect(() => {
-    (async () => {
+    const loadModels = async () => {
+      // This module statically imports every provider client. Import it only
+      // after the shell is interactive so those clients do not inflate the
+      // initial JavaScript payload.
+      const { getClientApi } = await import("../client/api");
+      const api = getClientApi(config.modelConfig.providerName);
       const models = await api.llm.models();
       config.mergeModels(models);
-    })();
+    };
+
+    // Model discovery is not needed to render the current conversation. Let
+    // the browser paint and hydrate the shell before this network request.
+    const timeout = window.setTimeout(() => {
+      void loadModels();
+    }, 1200);
+
+    return () => window.clearTimeout(timeout);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 }
@@ -240,28 +271,20 @@ export function Home() {
   useSwitchTheme();
   useLoadData();
   useHtmlLang();
+  const hasMounted = useHasMounted();
 
   useEffect(() => {
     console.log("[Config] got config from build time", getClientConfig());
-    useAccessStore.getState().fetch();
+    // Access configuration is not required for first paint either.
+    const timeout = window.setTimeout(() => {
+      useAccessStore.getState().fetch();
+    }, 500);
 
-    const initMcp = async () => {
-      try {
-        const enabled = await isMcpEnabled();
-        if (enabled) {
-          console.log("[MCP] initializing...");
-          await initializeMcpSystem();
-          console.log("[MCP] initialized");
-        }
-      } catch (err) {
-        console.error("[MCP] failed to initialize:", err);
-      }
-    };
-    initMcp();
+    return () => window.clearTimeout(timeout);
   }, []);
 
-  if (!useHasHydrated()) {
-    return <Loading />;
+  if (!hasMounted) {
+    return <AppShellSkeleton />;
   }
 
   return (

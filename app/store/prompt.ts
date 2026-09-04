@@ -33,6 +33,10 @@ export const SearchService = {
     this.ready = true;
   },
 
+  loadBuiltinPrompts() {
+    return loadBuiltinPrompts();
+  },
+
   remove(id: string) {
     this.userEngine.remove((doc) => doc.id === id);
   },
@@ -47,6 +51,43 @@ export const SearchService = {
     return userResults.concat(builtinResults).map((v) => v.item);
   },
 };
+
+let builtinPromptsLoad: Promise<void> | undefined;
+
+async function loadBuiltinPrompts(): Promise<void> {
+  if (SearchService.ready) return;
+  if (builtinPromptsLoad) return builtinPromptsLoad;
+
+  builtinPromptsLoad = fetch("./prompts.json")
+    .then((res) => {
+      if (!res.ok) throw new Error(`Failed to load prompts: ${res.status}`);
+      return res.json();
+    })
+    .then((res) => {
+      type PromptList = Array<[string, string]>;
+      const lang = getLang();
+      const promptList = (res[lang] ?? res.en ?? []) as PromptList;
+      const builtinPrompts = promptList.map(
+        ([title, content]) =>
+          ({
+            id: nanoid(),
+            title,
+            content,
+            createdAt: Date.now(),
+          }) as Prompt,
+      );
+      const userPrompts = usePromptStore.getState().getUserPrompts() ?? [];
+
+      SearchService.count.builtin = builtinPrompts.length;
+      SearchService.init(builtinPrompts, userPrompts);
+    })
+    .catch((error) => {
+      builtinPromptsLoad = undefined;
+      console.error("[Fetch] failed to fetch prompts", error);
+    });
+
+  return builtinPromptsLoad;
+}
 
 export const usePromptStore = createPersistStore(
   {
@@ -144,46 +185,6 @@ export const usePromptStore = createPersistStore(
       }
 
       return newState as any;
-    },
-
-    onRehydrateStorage(state) {
-      // Skip store rehydration on server side
-      if (typeof window === "undefined") {
-        return;
-      }
-
-      const PROMPT_URL = "./prompts.json";
-
-      type PromptList = Array<[string, string]>;
-
-      fetch(PROMPT_URL)
-        .then((res) => res.json())
-        .then((res) => {
-          let fetchPrompts = [res.en, res.tw, res.cn];
-          if (getLang() === "cn") {
-            fetchPrompts = fetchPrompts.reverse();
-          }
-          const builtinPrompts = fetchPrompts.map((promptList: PromptList) => {
-            return promptList.map(
-              ([title, content]) =>
-                ({
-                  id: nanoid(),
-                  title,
-                  content,
-                  createdAt: Date.now(),
-                }) as Prompt,
-            );
-          });
-
-          const userPrompts = usePromptStore.getState().getUserPrompts() ?? [];
-
-          const allPromptsForSearch = builtinPrompts
-            .reduce((pre, cur) => pre.concat(cur), [])
-            .filter((v) => !!v.title && !!v.content);
-          SearchService.count.builtin =
-            res.en.length + res.cn.length + res.tw.length;
-          SearchService.init(allPromptsForSearch, userPrompts);
-        });
     },
   },
 );

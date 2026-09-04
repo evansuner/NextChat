@@ -20,7 +20,6 @@ import {
   AI302_BASE_URL,
   OPENROUTER_BASE_URL,
 } from "../constant";
-import { getHeaders } from "../client/api";
 import { getClientConfig } from "../config/client";
 import { createPersistStore } from "../utils/store";
 import { ensure } from "../utils/clone";
@@ -63,9 +62,7 @@ const DEFAULT_SILICONFLOW_URL = isApp
 
 const DEFAULT_AI302_URL = isApp ? AI302_BASE_URL : ApiPath["302.AI"];
 
-const DEFAULT_OPENROUTER_URL = isApp
-  ? OPENROUTER_BASE_URL
-  : ApiPath.OpenRouter;
+const DEFAULT_OPENROUTER_URL = isApp ? OPENROUTER_BASE_URL : ApiPath.OpenRouter;
 
 const DEFAULT_ACCESS_STATE = {
   accessCode: "",
@@ -263,9 +260,10 @@ export const useAccessStore = createPersistStore(
         (this.enabledAccessControl() && ensure(get(), ["accessCode"]))
       );
     },
-    fetch() {
+    async fetch() {
       if (fetchState > 0 || getClientConfig()?.buildMode === "export") return;
       fetchState = 1;
+      const { getHeaders } = await import("../client/api");
       fetch("/api/config", {
         method: "post",
         body: null,

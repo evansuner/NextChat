@@ -16,6 +16,7 @@ import {
   getClientsStatus,
   getClientTools,
   getMcpConfigFromFile,
+  initializeMcpSystem,
   isMcpEnabled,
   pauseMcpServer,
   restartAllClients,
@@ -116,6 +117,9 @@ export function McpMarketPage() {
       if (!mcpEnabled) return;
       try {
         setIsLoading(true);
+        // MCP processes are intentionally started only when this feature is
+        // opened, rather than during every chat application's first paint.
+        await initializeMcpSystem();
         const config = await getMcpConfigFromFile();
         setConfig(config);
 

@@ -12,7 +12,6 @@ import type {
   MultimodalContent,
   RequestMessage,
 } from "../client/api";
-import { getClientApi } from "../client/api";
 import { ChatControllerPool } from "../client/controller";
 import { showToast } from "../components/ui-lib";
 import {
@@ -36,7 +35,12 @@ import { ModelConfig, ModelType, useAppConfig } from "./config";
 import { useAccessStore } from "./access";
 import { collectModelsWithDefaultModel } from "../utils/model";
 import { createEmptyMask, Mask } from "./mask";
-import { executeMcpAction, getAllTools, isMcpEnabled } from "../mcp/actions";
+import {
+  executeMcpAction,
+  getAllTools,
+  initializeMcpSystem,
+  isMcpEnabled,
+} from "../mcp/actions";
 import { extractMcpJson, isMcpJson } from "../mcp/utils";
 
 const localStorage = safeLocalStorage();
@@ -203,6 +207,8 @@ function fillTemplateWith(input: string, modelConfig: ModelConfig) {
 }
 
 async function getMcpSystemPrompt(): Promise<string> {
+  // Start MCP clients only when a submitted message needs their tool schema.
+  await initializeMcpSystem();
   const tools = await getAllTools();
 
   let toolsStr = "";
@@ -456,6 +462,7 @@ export const useChatStore = createPersistStore(
           ]);
         });
 
+        const { getClientApi } = await import("../client/api");
         const api: ClientApi = getClientApi(modelConfig.providerName);
         // make request
         api.llm.chat({
@@ -658,7 +665,7 @@ export const useChatStore = createPersistStore(
         });
       },
 
-      summarizeSession(
+      async summarizeSession(
         refreshTitle: boolean = false,
         targetSession: ChatSession,
       ) {
@@ -677,6 +684,7 @@ export const useChatStore = createPersistStore(
               session.mask.modelConfig.model,
               session.mask.modelConfig.providerName,
             );
+        const { getClientApi } = await import("../client/api");
         const api: ClientApi = getClientApi(providerName as ServiceProvider);
 
         // remove error messages if any

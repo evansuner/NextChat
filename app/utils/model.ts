@@ -1,5 +1,5 @@
 import { DEFAULT_MODELS, ServiceProvider } from "../constant";
-import { LLMModel } from "../client/api";
+import type { LLMModel } from "../client/api";
 
 const CustomSeq = {
   val: -1000, //To ensure the custom model located at front, start from -1000, refer to constant.ts

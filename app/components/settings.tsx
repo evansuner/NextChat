@@ -141,8 +141,24 @@ function EditPromptModal(props: { id: string; onClose: () => void }) {
 
 function UserPromptModal(props: { onClose?: () => void }) {
   const promptStore = usePromptStore();
+  const [builtinPromptsReady, setBuiltinPromptsReady] = useState(
+    SearchService.ready,
+  );
+
+  useEffect(() => {
+    let active = true;
+    void SearchService.loadBuiltinPrompts().then(() => {
+      if (active) setBuiltinPromptsReady(true);
+    });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const userPrompts = promptStore.getUserPrompts();
-  const builtinPrompts = SearchService.builtinPrompts;
+  const builtinPrompts = builtinPromptsReady
+    ? SearchService.builtinPrompts
+    : [];
   const allPrompts = userPrompts.concat(builtinPrompts);
   const [searchInput, setSearchInput] = useState("");
   const [searchPrompts, setSearchPrompts] = useState<Prompt[]>([]);
@@ -157,7 +173,7 @@ function UserPromptModal(props: { onClose?: () => void }) {
     } else {
       setSearchPrompts([]);
     }
-  }, [searchInput]);
+  }, [searchInput, builtinPromptsReady]);
 
   return (
     <div className="modal-mask">

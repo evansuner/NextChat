@@ -33,7 +33,7 @@ import {
   showConfirm,
 } from "./ui-lib";
 import { Avatar } from "./emoji";
-import { AvatarPicker } from "./avatar-picker";
+import dynamic from "next/dynamic";
 import Locale, { AllLangs, ALL_LANG_OPTIONS, Lang } from "../locales";
 import { useNavigate } from "react-router-dom";
 
@@ -57,6 +57,14 @@ import {
 } from "@hello-pangea/dnd";
 import { getMessageTextContent } from "../utils";
 import clsx from "clsx";
+
+// The picker ships a large emoji data set. It is only needed after the avatar
+// popover is opened, so keeping it out of the chat route avoids paying for it
+// on every application launch.
+const AvatarPicker = dynamic(
+  async () => (await import("./avatar-picker")).AvatarPicker,
+  { ssr: false },
+);
 
 // drag and drop helper function
 function reorder<T>(list: T[], startIndex: number, endIndex: number): T[] {

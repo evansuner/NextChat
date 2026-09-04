@@ -1,4 +1,4 @@
-import { LLMModel } from "../client/api";
+import type { LLMModel } from "../client/api";
 import { DalleQuality, DalleStyle, ModelSize } from "../typing";
 import { getClientConfig } from "../config/client";
 import {

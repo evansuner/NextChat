@@ -126,7 +126,7 @@ function getApiKey(keys?: string) {
     console.log(
       `[Server Config] using ${randomIndex + 1} of ${
         apiKeys.length
-      } api key - ${apiKey}`,
+      } configured api keys`,
     );
   }
 
@@ -283,5 +283,5 @@ export const getServerSideConfig = () => {
     allowedWebDavEndpoints,
     enableMcp: process.env.ENABLE_MCP === "true",
   };
-  return  serverSideConfig;
+  return serverSideConfig;
 };
