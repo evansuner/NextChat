@@ -51,5 +51,7 @@ export async function executeRequest(
   client: Client,
   request: McpRequestMessage,
 ) {
-  return client.request(request, z.any());
+  // The MCP response is intentionally untyped; cast the Zod 4 schema to the
+  // SDK's Zod 3 type because the SDK keeps its own Zod major version.
+  return client.request(request, z.any() as any);
 }
