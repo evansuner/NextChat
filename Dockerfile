@@ -3,6 +3,7 @@ FROM oven/bun:1.4.0-alpine AS bun
 FROM node:22-alpine AS base
 
 COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
+COPY --from=bun /usr/local/bin/bunx /usr/local/bin/bunx
 
 FROM base AS deps
 
