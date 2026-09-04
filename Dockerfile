@@ -1,4 +1,8 @@
+FROM oven/bun:1.4.0-alpine AS bun
+
 FROM node:22-alpine AS base
+
+COPY --from=bun /usr/local/bin/bun /usr/local/bin/bun
 
 FROM base AS deps
 
@@ -6,10 +10,9 @@ RUN apk add --no-cache libc6-compat
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
+COPY package.json bun.lock ./
 
-RUN yarn config set registry 'https://registry.npmmirror.com/'
-RUN yarn install
+RUN bun install --frozen-lockfile --registry=https://registry.npmmirror.com/
 
 FROM base AS builder
 
@@ -21,7 +24,7 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-RUN yarn build
+RUN bun run build
 
 FROM base AS runner
 WORKDIR /app

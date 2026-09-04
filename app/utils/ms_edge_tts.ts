@@ -345,7 +345,15 @@ export class MsEdgeTTS {
       });
 
       readable.on("end", () => {
-        resolve(Buffer.concat(data).buffer);
+        const buffer = Buffer.concat(data);
+        // Node 24 types Buffer.buffer as ArrayBufferLike; return an
+        // ArrayBuffer slice containing only this Buffer's bytes.
+        resolve(
+          buffer.buffer.slice(
+            buffer.byteOffset,
+            buffer.byteOffset + buffer.byteLength,
+          ) as ArrayBuffer,
+        );
       });
 
       readable.on("error", (err) => {
